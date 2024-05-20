@@ -24,11 +24,11 @@ void Graph::addEdge(int v1, int v2){
 
 }
 
-set<int> *Graph::vertexNeighbours(int v) {
-    set<int> *neighbours= new set<int>;
+set<int> Graph::vertexNeighbours(int v) {
+    set<int> neighbours;
     for (int i = 0; i < size; i++) {
         if (m_adyacency[v][i] == 1) {
-            neighbours->insert(i);
+            neighbours.insert(i);
         }
     }
     return neighbours;
@@ -44,29 +44,19 @@ set<set<int>*> * Graph::BK(set<int> *R,set<int> *P, set<int> *X , set<set<int>*>
     set<int> *P_new= new set<int>(*P); // esto copia P
     set<int> *X_new= new set<int>(*X); // esto copia X
     set<int> *P_iter = new set<int>(*P);
-    map<int, set<int>*> neighbours_sets;
-
-    // Mapear la función en el conjunto
-    for (int i = 1; i < P->size(); ++i) {
-        neighbours_sets[i] = vertexNeighbours(i);
-    }
-
-    auto pivot_neighbours = max_element(neighbours_sets.begin(), neighbours_sets.end(),
-        [](const set<int>& set1, const set<int>& set2) {
-            return set1.size() < set2.size();
-        });
 
     for(auto v : *P_iter) {
         
+        cout << v << endl;
         set<int> *R1 = new set<int>(*R);
         R1->insert(v);
 
-        set<int> *vecinos = this->vertexNeighbours(v);
+        set<int> vecinos = vertexNeighbours(v);
         set<int> *P1 = new set<int>;
-        set_intersection(P_new->begin(), P_new->end(), vecinos->begin(), vecinos->end(), inserter(*P1, P1->begin()));
+        set_intersection(P_new->begin(), P_new->end(), vecinos.begin(), vecinos.end(), inserter(*P1, P1->begin()));
 
         set<int> *X1 = new set<int>;
-        set_intersection(X_new->begin(), X_new->end(), vecinos->begin(), vecinos->end(), inserter(*X1, X1->begin()));
+        set_intersection(X_new->begin(), X_new->end(), vecinos.begin(), vecinos.end(), inserter(*X1, X1->begin()));
         C = this->BK(R1,P1,X1,C);
 
         P_new->erase(v);
@@ -119,3 +109,92 @@ void Graph::print() {
     }
 
 }
+
+set<set<int>*>* Graph::coloring(set<int>* P) {
+
+    int n = P->size();
+    vector<int> P_vec(P->begin(), P->end());
+    vector<int> degree(n, 0);
+
+    for (int i = 0; i < n; ++i) {
+        degree[i] = vertexNeighbours(P_vec[i]).size();
+    }
+
+    vector<pair<int, int>> vertices;
+    for (int i = 0; i < n; ++i) {
+        vertices.push_back({degree[i], P_vec[i]});
+    }
+    sort(vertices.begin(), vertices.end(), greater<pair<int, int>>());
+
+    P->clear();
+    for (int i = 0; i < n; ++i) {
+        P->insert(vertices[i].second);
+    }
+
+    int color = 0;
+    vector<bool> availableColors(n, true);
+    vector<int> colors(n, -1);
+    set<set<int>*>* colorClasses;
+
+    for (int i = 0; i < n; ++i) {
+        fill(availableColors.begin(), availableColors.end(), true);
+        for (int u : vertexNeighbours(vertices[i].second)) {
+            auto it = find(P_vec.begin(), P_vec.end(), u);
+            if (it != P_vec.end()) {
+                int idx = distance(P_vec.begin(), it);
+                if (colors[idx] != -1) {
+                    availableColors[colors[idx]] = false;
+                }
+            }
+        }
+        for (int c = 0; c < n; ++c) {
+            if (availableColors[c]) {
+                colors[i] = c;
+                if (colorClasses->size() <= c) {
+                    colorClasses->insert(new set<int>());
+                }
+                auto it = colorClasses->begin();
+                advance(it, c);
+                const_cast<set<int>&>(**it).insert(vertices[i].second);
+                color = max(color, c + 1);
+                break;
+            }
+        }
+    }
+
+    return colorClasses;
+}
+/*
+void bronKerboschWithColoring(Graph& G, set<int>& R, set<int>& P, set<int>& X, int& maxCliqueSize, set<int>& maxClique) {
+    if (P.empty() && X.empty()) {
+        if (R.size() > maxCliqueSize) {
+            maxCliqueSize = R.size();
+            maxClique = R;
+        }
+        return;
+    }
+
+    set<set<int>> colorClasses = colorSort(P, G);
+
+    for (const auto& colorClass : colorClasses) {
+        for (int v : colorClass) {
+            if (R.size() + colorClasses.size() <= maxCliqueSize) {
+                return;
+            }
+
+            set<int> newR = R;
+            newR.insert(v);
+
+            set<int> newP, newX;
+            set<int> neighbors = G.getNeighbors(v);
+            set_intersection(P.begin(), P.end(), neighbors.begin(), neighbors.end(), inserter(newP, newP.begin()));
+            set_intersection(X.begin(), X.end(), neighbors.begin(), neighbors.end(), inserter(newX, newX.begin()));
+
+            bronKerboschWithColoring(G, newR, newP, newX, maxCliqueSize, maxClique);
+
+            P.erase(v); // Directly modifies the original P
+            X.insert(v); // Directly modifies the original X
+        }
+    }
+}
+*/
