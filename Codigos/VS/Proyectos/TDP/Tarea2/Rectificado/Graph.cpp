@@ -28,33 +28,44 @@ set<int>* Graph::vertexNeighbours(int v) {
     return neighbours;
 } 
 
-set<set<int>*> * Graph::BK(set<int> *R,set<int> *P, set<int> *X , set<set<int>*> *C ) {
+set<set<int>*> * Graph::BK(set<int> *R,set<int> P, set<int> X , set<set<int>*> *C ) {
 
-    if (P->empty() && X->empty()) {
+    if (P.empty() && X.empty()) {
+        if(R->size()>Cmax->size()){
+            Cmax = R;
+        }
         C->insert(R);
         return(C);
     }
 
-    set<int> *P_new= new set<int>(*P); // esto copia P
-    set<int> *X_new= new set<int>(*X); // esto copia X
-    set<int> *P_iter = new set<int>(*P);
+    set<int> P_new= P; 
+    set<int> X_new= X; 
 
-    for(auto v : *P_iter) {
+    int pivot = maxDegree(P);
+    set<int> *neighbours = vertexNeighbours(pivot);
+    set<int> P_iter;
+    set_difference(P.begin(), P.end(), neighbours->begin(), neighbours->end(), inserter(P_iter, P_iter.end()));
+    delete neighbours;
+
+    for(auto v : P_iter) {
         
         set<int> *R1 = new set<int>(*R);
         R1->insert(v);
 
         set<int>* vecinos = vertexNeighbours(v);
-        set<int> *P1 = new set<int>;
-        set_intersection(P_new->begin(), P_new->end(), vecinos->begin(), vecinos->end(), inserter(*P1, P1->begin()));
+        set<int> P1;
+        set_intersection(P_new.begin(), P_new.end(), vecinos->begin(), vecinos->end(), inserter(P1, P1.begin()));
 
-        set<int> *X1 = new set<int>;
-        set_intersection(X_new->begin(), X_new->end(), vecinos->begin(), vecinos->end(), inserter(*X1, X1->begin()));
-        C = this->BK(R1,P1,X1,C);
+        set<int> X1;
+        set_intersection(X_new.begin(), X_new.end(), vecinos->begin(), vecinos->end(), inserter(X1, X1.begin()));
 
-        P_new->erase(v);
-        X_new->insert(v);
+        if((R1->size()+P1.size())>=Cmax->size()){
+            C = this->BK(R1,P1,X1,C);
+        }
+        P_new.erase(v);
+        X_new.insert(v);
     }
+
     return C;
 
 }
@@ -176,23 +187,24 @@ set<int> *Graph::degreeSet(set<int> *P){
     for(auto it = P->begin(); it != P->end(); it++){
 
         aux->insert(degree(*it));
-
     }
     return aux;
 
 }
 
-void Graph::maxDegree(set<int> *P){
+int Graph::maxDegree(set<int> P){
 
-    for(auto it = P->begin(); it != P->end(); it++){
+    int max = 0;
+    for(auto it = P.begin(); it != P.end(); it++){
 
-        if(max_degree < (*it)){
+        if(degree(max) < degree(*it)){
 
-            max_degree = (*it);
+            max = (*it);
         }
 
     }
-    return;
+
+    return max;
 
 }
 
@@ -227,47 +239,3 @@ set<set<int>*>* Graph::coloringWithGrade(set<int>* P){
     return aux2;
 }
 
-set<set<int>*>* Graph::BKv4(set<int> *R,set<int> *P, set<int> *X, set<set<int>*> *C) {
-    
-    if (P->empty() && X->empty()) {
-        C->insert(R);
-        return C;
-    }
-
-    int pivot = max_neighbours(P);
-    set<int> *neighbours = vertexNeighbours(pivot);
-    set<int>* P_iter = new set<int>;
-    set_difference(P->begin(), P->end(), neighbours->begin(), neighbours->end(), inserter(*P_iter, P_iter->end()));
-    delete neighbours;
-
-    for(int v : *P_iter) {
-        
-        set<int> *R1 = new set<int>(*R);
-        R1->insert(v);
-
-        set<int>* vecinos = vertexNeighbours(v);
-        set<int>* P1 = new set<int>;
-        set_intersection(P->begin(), P->end(), vecinos->begin(), vecinos->end(), inserter(*P1, P1->begin()));
-
-        set<int>* X1 = new set<int>;
-        set_intersection(X->begin(), X->end(), vecinos->begin(), vecinos->end(), inserter(*X1, X1->begin()));
-
-        color_classes = coloring(P1);
-        int limit = color_classes->size();
-
-        if((R1->size()+limit) > C->size()){
-
-            if(degree(v)==max_degree){
-
-                C = this->BK(R1,P1,X1,C);
-                
-            }
-        }
-
-        P->erase(v);
-        X->insert(v);
-    }
-
-    return C;
-
-}

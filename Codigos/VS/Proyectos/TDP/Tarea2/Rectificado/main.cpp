@@ -6,17 +6,16 @@ int main() {
     g->read();
     
     set<int> *R = new set<int>;
-    set<int> *P = new set<int>;
-    set<int> *X = new set<int>;
+    set<int> P;
+    set<int> X;
     set<set<int>*> *C = new set<set<int>*>;
     for (int i = 0; i < g->size_m; i++) {
-        P->insert(i);
+        P.insert(i);
     }
 
     cout << "Cargando Clique..." << endl;
-    g->maxDegree(g->degreeSet(P));
     clock_t start = clock(); //Medicion temporal
-    C = g->BKv4(R,P,X,C);
+    C = g->BK(R,P,X,C);
     clock_t end = clock();
     double elapsed = end - start;
     cout << endl;
