@@ -3,19 +3,19 @@
 Graph::Graph(){
 
     m_adyacency = vector<vector<int>>();
-    this->size = 0;
+    this->size_m = 0;
 
 }
-Graph::Graph(int size) {
+Graph::Graph(int size_m) {
 
     m_adyacency = vector<vector<int>>();
-    this->size = size;
+    this->size_m = size_m;
 
 }
 
-Graph::Graph(vector<vector<int>> matrix, int size) {
+Graph::Graph(vector<vector<int>> matrix, int size_m) {
     m_adyacency = matrix;
-    this->size = size;
+    this->size_m = size_m;
 }
 
 void Graph::addEdge(int v1, int v2){
@@ -26,7 +26,7 @@ void Graph::addEdge(int v1, int v2){
 
 set<int> *Graph::vertexNeighbours(int v) {
     set<int> *neighbours = new set<int>;
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < size_m; i++) {
         if (m_adyacency[v][i] == 1) {
             neighbours->insert(i);
         }
@@ -80,8 +80,8 @@ void Graph::read(){
     }
 
     // Leer el tamaño del grafo
-    file >> size;
-    m_adyacency.resize(size, vector<int>(size, 0));
+    file >> size_m;
+    m_adyacency.resize(size_m, vector<int>(size_m, 0));
 
     // Leer las conexiones nodo a nodo y actualizar la matriz de adyacencia
     int v1, v2;
@@ -100,13 +100,34 @@ void Graph::read(){
 void Graph::print() {
 
     cout << "Matriz de adyacencia:\n";
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
+    for (int i = 0; i < size_m; i++) {
+        for (int j = 0; j < size_m; j++) {
             cout << m_adyacency[i][j] << " ";
         }
         cout << endl;
     }
 
+}
+
+int Graph::maxNeighbours(set<int> *P){
+
+    int position = -1;
+    int max_value = 0;
+    int i = 0;
+    set<int> *aux = new set<int>;
+    for(auto it = P->begin(); it != P->end(); it++){
+
+        aux = vertexNeighbours(*it);
+        if(max_value < aux->size()){
+
+            position = i;
+            max_value = aux->size();
+        }
+        i++;
+    }
+    
+    delete aux;
+    return position;
 }
 
 set<set<int>*>* Graph::coloring(set<int>* P) {
@@ -134,174 +155,88 @@ set<set<int>*>* Graph::coloring(set<int>* P) {
         }
 
         colourClasses->insert(current);
+        delete neighbours;
     }
 
-    delete uncolored; // Liberar la memoria del conjunto no coloreado
+    delete uncolored;
     return colourClasses;
 }
 
-set<int> *Graph::maxClique(){
-
-    set<int> *P = new set<int>;
-    set<int>*C = new set<int>;
-    for (int i = 0; i < this->size; i++) {
-        P->insert(i);
-    }
-    BKv2(C,P);
-    return this->Cmax;
-}
-
-void Graph::BKv2(set<int> *C,set<int> *P){
-
-    set<set<int>*>* color_clasess = coloring(P);
-    while(!(color_clasess->empty())){
-        for (auto it = color_clasess->begin(); it != color_clasess->end(); it++) {
-            for (auto it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
-                if(((C->size())+(color_clasess->size()))<= Cmax->size()){
-                    return;
-                }
-                set<int> *neighbours = vertexNeighbours(*it2);
-                set<int> *P1 = new set<int>;
-                set_intersection(P1->begin(), P1->end(), neighbours->begin(), neighbours->end(), inserter(*P1, P1->begin()));
-                C->insert(*it2);
-                if((C->size())>(Cmax->size())){
-
-                    Cmax = C;
-                }
-                if(!(P1->empty())){
-
-                    BKv2(C,P1);
-                }
-
-            }
-            color_clasess->erase(*it);
-        }
-    }
-}
-
-/*
-set<set<int>*>* Graph::BKWithColoring(set<int> *R, set<int>*P, set<int> *X,set<set<int>*>* C){
-
-    set<set<int>*>* color_clasess = coloring(P);
-    if (color_clasess->empty() && X->empty()) {
-        C->insert(R);
-        return(C);
-    }
-
-    set<int> *P_new= new set<int>(*P); // esto copia P
-    set<int> *X_new= new set<int>(*X); // esto copia X
-
-    while(!(color_clasess->empty())){
-
-        for (auto it = C->begin(); it != C->end(); it++) {
-            for (auto it2 = (*it)->begin(); it2 != (*it)->end(); it2++) {
-                if(((C->size())+(color_clasess->size()))<= Cmax->size()){
-                    return C;
-                }
-                set<int> *R1 = new set<int>(*R);
-                R1->insert(*it2);
-                set<int> *vecinos = vertexNeighbours(*it2);
-                set<int> *P1 = new set<int>;
-                set_intersection(P_new->begin(), P_new->end(), vecinos->begin(), vecinos->end(), inserter(*P1, P1->begin()));
-                set<int> *X1 = new set<int>;
-                set_intersection(X_new->begin(), X_new->end(), vecinos->begin(), vecinos->end(), inserter(*X1, X1->begin()));
-                if((R->size())>(Cmax->size())){
-
-                    Cmax = R;
-                }
-                if(!(P1->empty())){
-
-                    BKWithColoring(R,P1,X1,C);
-                }
-                P_new->erase(*it2);
-                X_new->insert(*it2);
-                
-            }
-            color_clasess->erase(*it);
-        }
-
-        return(C);
-    }
-}
-*/
-/*
-set<set<int>*>* Graph::BKWithColoring(set<int> *R, set<int>*P, set<int> *X,set<set<int>*>* C){
+set<set<int>*>* Graph::BKv2(set<int> *R,set<int> *P, set<int> *X , set<set<int>*> *C) {
 
     if (P->empty() && X->empty()) {
         C->insert(R);
         return C;
     }
 
-    for (auto it = P->begin(); it != P->end(); ++it) {
-        int v = *it;
-        set<int> *nextR = new set<int>(*R);
-        nextR->insert(v);
-        set<int> *nextP = new set<int>;
-        set<int> *nextX = new set<int>;
+    int pos_pivot = maxNeighbours(P);
+    set<int>::iterator it = P->begin();
+    advance(it, pos_pivot);
+    int pivot = *it;
+    set<int>* neighbours = vertexNeighbours(pivot);
+    set<int>* P_iter = new set<int>;
+    set_difference(P->begin(), P->end(), neighbours->begin(), neighbours->end(), inserter(*P_iter, P_iter->end()));
 
-        for (auto pIt = P->begin(); pIt != P->end(); ++pIt) {
-            if (m_adyacency[v][*pIt] == 1){
-                nextP->insert(*pIt);
-            }
+    for(int v : *P_iter) {
+        
+        set<int> *R1 = new set<int>(*R);
+        R1->insert(v);
+
+        set<int> *vecinos = vertexNeighbours(v);
+        set<int> *P1 = new set<int>;
+        set_intersection(P->begin(), P->end(), vecinos->begin(), vecinos->end(), inserter(*P1, P1->begin()));
+
+        set<int> *X1 = new set<int>;
+        set_intersection(X->begin(), X->end(), vecinos->begin(), vecinos->end(), inserter(*X1, X1->begin()));
+        C = this->BK(R1,P1,X1,C);
+
+        P->erase(v);
+        X->insert(v);
+    }
+    return C;
+
+}
+
+set<set<int>*>* Graph::BKv3(set<int> *R,set<int> *P, set<int> *X , set<set<int>*> *C) {
+
+    if (P->empty() && X->empty()) {
+        C->insert(R);
+        return C;
+    }
+
+    int pos_pivot = maxNeighbours(P);
+    set<int>::iterator it = P->begin();
+    advance(it, pos_pivot);
+    int pivot = *it;
+    set<int>* neighbours = vertexNeighbours(pivot);
+    set<int>* P_iter = new set<int>;
+    set_difference(P->begin(), P->end(), neighbours->begin(), neighbours->end(), inserter(*P_iter, P_iter->end()));
+
+    for(int v : *P_iter) {
+        
+        set<int> *R1 = new set<int>(*R);
+        R1->insert(v);
+
+        set<int> *vecinos = vertexNeighbours(v);
+        set<int> *P1 = new set<int>;
+        set_intersection(P->begin(), P->end(), vecinos->begin(), vecinos->end(), inserter(*P1, P1->begin()));
+
+        set<int> *X1 = new set<int>;
+        set_intersection(X->begin(), X->end(), vecinos->begin(), vecinos->end(), inserter(*X1, X1->begin()));
+
+        set<set<int>*>* color_classes = coloring(P1);
+        int limit = color_classes->size();
+        delete color_classes;
+        
+        if((R1->size()+limit) > C->size()){
+
+            C = this->BK(R1,P1,X1,C);
+
         }
-
-        for (auto xIt = X->begin(); xIt != X->end(); ++xIt) {
-            if (m_adyacency[v][*xIt] == 1){
-                nextX->insert(*xIt);
-            }
-        }
-
-        auto result = BKWithColoring(nextR, nextP, nextX,C);
-
-        C->insert(result->begin(), result->end());
-
-        delete result;
-
         P->erase(v);
         X->insert(v);
     }
 
     return C;
+
 }
-*//*
-set<set<int>*>* Graph::BKWithColoring(set<int> *R, set<set<int>*>*P, set<int> *X, int maxCliqueSize, set<set<int>*>* C) {
-
-    if (P->empty() && X->empty()) {
-        if (R->size() >= maxCliqueSize) {
-            maxCliqueSize = R->size();
-            C->insert(new set<int>(*R));
-        }
-        return C;
-    }
-
-    set<set<int>*>* colorClasses = coloring(P);
-
-    for (auto it = P->begin(); it != P->end(); ++it) {
-        for (auto it2 = (*it)->begin(); it2 != (*it)->end(); ++it2) {
-            if (R->size() + P->size() <= maxCliqueSize) {
-                return C; // No necesitas seguir explorando esta rama
-            }
-
-            set<int>* newR = new set<int>(*R);
-            newR->insert(*it2);
-
-            set<int>* newP = new set<int>;
-            set<int>* newX = new set<int>;
-            set<int>* neighbors = vertexNeighbours(*it2);
-            set_intersection(P->begin(), P->end(), neighbors->begin(), neighbors->end(), inserter(*newP, newP->begin()));
-            set_intersection(X->begin(), X->end(), neighbors->begin(), neighbors->end(), inserter(*newX, newX->begin()));
-
-            set<set<int>*>* cliqueSet = BKWithColoring(newR, newP, newX, maxCliqueSize,C);
-            C->insert(cliqueSet->begin(), cliqueSet->end());
-
-            delete newR;
-            delete newP;
-            delete newX;
-        }
-    }
-
-    delete colorClasses;
-    return C;
-    
-}
-*/
