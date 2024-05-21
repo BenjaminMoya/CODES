@@ -14,14 +14,15 @@ int main() {
     }
 
     cout << "Cargando Clique..." << endl;
-
+    g->maxDegree(g->degreeSet(P));
     clock_t start = clock(); //Medicion temporal
-    C = g->BKv3(R,P,X,C);
+    C = g->BKv4(R,P,X,C);
     clock_t end = clock();
     double elapsed = end - start;
     cout << endl;
-    
+
     cout << "Clique Maximo" << endl;
+    
     set<int> *max_clique = new set<int>;
     size_t max_size = 0;
     int i = 0;
@@ -39,7 +40,7 @@ int main() {
     }
     
     cout << endl;
-    cout << "Tamano del clique: " << i << endl;
+    cout << "Size del clique: " << i << endl;
     cout << endl;
     cout << "Tiempo transcurrido:" << elapsed << " Milisegundos" << endl;
     return 0;
