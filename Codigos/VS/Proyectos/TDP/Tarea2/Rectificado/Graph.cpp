@@ -30,7 +30,9 @@ set<int>* Graph::vertexNeighbours(int v) {
 
 set<set<int>*> * Graph::BK(set<int> *R,set<int> P, set<int> X , set<set<int>*> *C ) {
 
+  
     if (P.empty() && X.empty()) {
+
         if(R->size()>Cmax->size()){
             Cmax = R;
         }
@@ -40,12 +42,24 @@ set<set<int>*> * Graph::BK(set<int> *R,set<int> P, set<int> X , set<set<int>*> *
 
     set<int> P_new= P; 
     set<int> X_new= X; 
-
-    int pivot = maxDegree(P);
-    set<int> *neighbours = vertexNeighbours(pivot);
     set<int> P_iter;
-    set_difference(P.begin(), P.end(), neighbours->begin(), neighbours->end(), inserter(P_iter, P_iter.end()));
-    delete neighbours;
+
+    if(pivot_num == 0){
+
+        pivot_num++;
+        int pivot = maxDegree(P);
+        set<int> *neighbours = vertexNeighbours(pivot);
+        set_difference(P.begin(), P.end(), neighbours->begin(), neighbours->end(), inserter(P_iter, P_iter.end()));
+        delete neighbours;
+
+    } else {
+
+        int pivot = *P.begin();
+        set<int> *neighbours = vertexNeighbours(pivot);
+        set_difference(P.begin(), P.end(), neighbours->begin(), neighbours->end(), inserter(P_iter, P_iter.end()));
+        delete neighbours;
+
+    }
 
     for(auto v : P_iter) {
         
@@ -60,10 +74,12 @@ set<set<int>*> * Graph::BK(set<int> *R,set<int> P, set<int> X , set<set<int>*> *
         set_intersection(X_new.begin(), X_new.end(), vecinos->begin(), vecinos->end(), inserter(X1, X1.begin()));
 
         if((R1->size()+P1.size())>=Cmax->size()){
+
             C = this->BK(R1,P1,X1,C);
         }
-        P_new.erase(v);
-        X_new.insert(v);
+
+        P.erase(v);
+        X.insert(v);
     }
 
     return C;
@@ -114,60 +130,6 @@ void Graph::print() {
 
 }
 
-int Graph::max_neighbours(set<int> *P){
-
-    int pivot = -1;
-    int max_value = 0;
-    int i = 0;
-    set<int>* aux;
-    for(auto it = P->begin(); it != P->end(); it++){
-
-        aux = vertexNeighbours(*it);
-        if(max_value < aux->size()){
-
-            pivot = i;
-            max_value = aux->size();
-        }
-        i++;
-    }
-    
-    return pivot;
-}
-
-set<set<int>*>* Graph::coloring(set<int> *P) {
-
-    set<set<int>*>* colourClasses = new set<set<int>*>;
-    set<int>* uncolored = new set<int>(*P);
-
-    while (!uncolored->empty()) {
-        set<int>* current = new set<int>;
-        set<int> aux;
-        set<int>* neighbours;
-        set<int> inter;
-
-        for (auto it = uncolored->begin(); it != uncolored->end(); ++it) {
-            aux.insert(*it);
-            neighbours = vertexNeighbours(*it);
-            inter.clear();
-            set_intersection(aux.begin(), aux.end(), neighbours->begin(), neighbours->end(),inserter(inter, inter.begin()));
-            if (inter.empty()) {
-                current->insert(*it);
-            }
-        }
-
-        for (auto it = current->begin(); it != current->end(); ++it) {
-            uncolored->erase(*it);
-        }
-
-        delete neighbours;
-        colourClasses->insert(current);
-
-    }
-
-    return colourClasses;
-
-}
-
 
 int Graph::degree(int v){
 
@@ -178,17 +140,6 @@ int Graph::degree(int v){
         }
     }
     return grade;
-
-}
-
-set<int> *Graph::degreeSet(set<int> *P){
-
-    set<int>* aux = new set<int>;
-    for(auto it = P->begin(); it != P->end(); it++){
-
-        aux->insert(degree(*it));
-    }
-    return aux;
 
 }
 
@@ -208,34 +159,22 @@ int Graph::maxDegree(set<int> P){
 
 }
 
-set<set<int>*>* Graph::coloringWithGrade(set<int>* P){
+double Graph::density(){
 
-    int grade;
-    set<int> *aux1 = new set<int>;
-    set<set<int>*>*aux2 = new set<set<int>*>;
-    for(int i=0;i<size_m;i++){
+    int n = size_m;
+    int m = 0;
 
-        grade = degree(i);
-        aux1->insert(grade);
-
-    }
-
-    auto it = aux1->begin();
-    while (it != aux1->end()) {
-        set<int> *temp = new set<int>;
-        for (int j=0;j<size_m;j++){
-
-            if(degree(j)==(*it)){
-
-                temp->insert(j);
-
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j) {
+            if (m_adyacency[i][j] == 1) {
+                m++;
             }
         }
-        aux2->insert(temp);
-        ++it;
-        
     }
 
-    return aux2;
-}
+    // Calcular la densidad
+    double max_edges = n * (n - 1) / 2.0;
+    double density = m / max_edges;
 
+    return density;
+}

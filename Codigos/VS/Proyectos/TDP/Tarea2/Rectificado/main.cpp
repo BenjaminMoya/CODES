@@ -42,6 +42,7 @@ int main() {
     cout << "Size del clique: " << i << endl;
     cout << endl;
     cout << "Tiempo transcurrido:" << elapsed << " Milisegundos" << endl;
+    cout << "Densidad:" << g->density() << endl; //Medida experimental
     return 0;
     
 }
