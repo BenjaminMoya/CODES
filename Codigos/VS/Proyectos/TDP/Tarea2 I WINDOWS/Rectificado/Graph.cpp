@@ -6,17 +6,6 @@ Graph::Graph(){
     this->size_m = 0;
 
 }
-Graph::Graph(int size_m) {
-
-    m_adyacency = vector<vector<int>>();
-    this->size_m = size_m;
-
-}
-
-Graph::Graph(vector<vector<int>> matrix, int size_m) {
-    m_adyacency = matrix;
-    this->size_m = size_m;
-}
 
 set<int>* Graph::vertexNeighbours(int v) {
     set<int>* neighbours = new set<int>;
@@ -44,20 +33,17 @@ set<set<int>*> * Graph::BK(set<int> *R,set<int> P, set<int> X , set<set<int>*> *
     set<int> X_new= X; 
     set<int> P_iter;
 
-    if(pivot_num == 0){
+    int pivot = maxDegree(P);
+    set<int> *neighbours_pivot = vertexNeighbours(pivot);
+    set_difference(P.begin(), P.end(), neighbours_pivot->begin(), neighbours_pivot->end(), inserter(P_iter, P_iter.end()));
+    delete neighbours_pivot;
 
-        pivot_num++;
-        int pivot = maxDegree(P);
-        set<int> *neighbours = vertexNeighbours(pivot);
-        set_difference(P.begin(), P.end(), neighbours->begin(), neighbours->end(), inserter(P_iter, P_iter.end()));
-        delete neighbours;
-
-    } else {
+    if(P_iter.empty()) {
 
         int pivot = *P.begin();
-        set<int> *neighbours = vertexNeighbours(pivot);
-        set_difference(P.begin(), P.end(), neighbours->begin(), neighbours->end(), inserter(P_iter, P_iter.end()));
-        delete neighbours;
+        set<int> *neighbours_pivot = vertexNeighbours(pivot);
+        set_difference(P.begin(), P.end(), neighbours_pivot->begin(), neighbours_pivot->end(), inserter(P_iter, P_iter.end()));
+        delete neighbours_pivot;
 
     }
 
@@ -66,12 +52,12 @@ set<set<int>*> * Graph::BK(set<int> *R,set<int> P, set<int> X , set<set<int>*> *
         set<int> *R1 = new set<int>(*R);
         R1->insert(v);
 
-        set<int>* vecinos = vertexNeighbours(v);
+        set<int>* neighbours_v = vertexNeighbours(v);
         set<int> P1;
-        set_intersection(P_new.begin(), P_new.end(), vecinos->begin(), vecinos->end(), inserter(P1, P1.begin()));
+        set_intersection(P_new.begin(), P_new.end(), neighbours_v->begin(), neighbours_v->end(), inserter(P1, P1.begin()));
 
         set<int> X1;
-        set_intersection(X_new.begin(), X_new.end(), vecinos->begin(), vecinos->end(), inserter(X1, X1.begin()));
+        set_intersection(X_new.begin(), X_new.end(), neighbours_v->begin(), neighbours_v->end(), inserter(X1, X1.begin()));
 
         if((R1->size()+P1.size())>=Cmax->size()){
 
@@ -80,6 +66,7 @@ set<set<int>*> * Graph::BK(set<int> *R,set<int> P, set<int> X , set<set<int>*> *
 
         P.erase(v);
         X.insert(v);
+        delete neighbours_v;
     }
 
     return C;
@@ -116,20 +103,6 @@ void Graph::read(){
     file.close();
     
 }
-
-
-void Graph::print() {
-
-    cout << "Matriz de adyacencia:\n";
-    for (int i = 0; i < size_m; i++) {
-        for (int j = 0; j < size_m; j++) {
-            cout << m_adyacency[i][j] << " ";
-        }
-        cout << endl;
-    }
-
-}
-
 
 int Graph::degree(int v){
 
