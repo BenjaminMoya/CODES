@@ -19,7 +19,7 @@ class Graph{
     private:
         int numberOfVertices;
         vector<vector<int>> adyacencyMatrix;
-        set<int>* maximunClique = new set<int>;
+        set<int>* maximunClique;
     public:
         //Constructor
         Graph();
@@ -37,6 +37,7 @@ class Graph{
 
         //Otros metodos
         void read();
+        void read(const char* filename);
         void print();
         double density();
 
