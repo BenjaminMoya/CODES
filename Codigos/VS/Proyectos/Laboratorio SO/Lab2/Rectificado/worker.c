@@ -1,81 +1,135 @@
 #include "fworker.h"
 
-// Función principal
-int main(int argc, char* argv[]) {
-    int opt;
-    const char* input_file = NULL;
-    const char* output_file = NULL;
-    float factor = 1.0;
-    float umbral = 0.5;
-    int grayscale_flag = 0;
-    int binarization_flag = 0;
-    int saturation_flag = 0;
+int main(int argc, char *argv[]) {
+    int option;
+    int filters = 0, workers = 0;
+    float saturation = 1.0, thresholdbina = 0.5;
+    char *prefix = NULL;
 
-    // Analizar argumentos de línea de comando
-    while ((opt = getopt(argc, argv, "i:o:s:g:b:u:")) != -1) {
-        switch (opt) {
-            case 'i':
-                input_file = optarg;
+    while ((option = getopt(argc, argv, "N:f:p:u:W:")) != -1) { // Ciclo para leer las opciones ingresadas por el usuario
+        switch (option) {
+            case 'N': // Opción para ingresar el prefijo de las imágenes
+                prefix = (char*)malloc(strlen(optarg) + 1); // Asignación de memoria para prefix
+                if (prefix != NULL) {
+                    strcpy(prefix, optarg);
+                } else {
+                    // Manejo de error si malloc falla en asignar memoria
+                    printf("Error: No se pudo asignar memoria para prefix\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
-            case 'o':
-                output_file = optarg;
+            case 'f': // Opción para ingresar el número de filtro a aplicar
+                filters = atoi(optarg);
                 break;
-            case 's':
-                saturation_flag = 1;
-                factor = atof(optarg);
+            case 'p': // Opción para ingresar el valor de saturación
+                saturation = atof(optarg);
                 break;
-            case 'g':
-                grayscale_flag = 1;
+            case 'u': // Opción para ingresar el umbral de binarización
+                thresholdbina = atof(optarg);
                 break;
-            case 'b':
-                binarization_flag = 1;
-                umbral = atof(optarg);
-                break;
-            case 'u':
-                umbral = atof(optarg);
+            case 'W': // Opción para ingresar el número de trabajadores
+                workers = atoi(optarg);
                 break;
             default:
-                fprintf(stderr, "Usage: %s -i input_file -o output_file [-s factor] [-g] [-b umbral]\n", argv[0]);
+                fprintf(stderr, "Uso: %s -N prefix -f filters -p saturation -u thresholdbina -W workers\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
 
-    if (input_file == NULL || output_file == NULL) {
-        fprintf(stderr, "Usage: %s -i input_file -o output_file [-s factor] [-g] [-b umbral]\n", argv[0]);
+    // Verificar si los argumentos necesarios han sido proporcionados
+    if (prefix == NULL || workers <= 0) {
+        fprintf(stderr, "Uso: %s -N prefix -f filters -p saturation -u thresholdbina -W workers\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    // Leer la imagen BMP
-    BMPImage* image = read_bmp(input_file);
-    if (image == NULL) {
-        fprintf(stderr, "Error reading BMP file %s\n", input_file);
-        exit(EXIT_FAILURE);
+    // Asignar memoria para los pipes
+    int **pipes = (int **)malloc(workers * sizeof(int *));
+    if (pipes == NULL) {
+        fprintf(stderr, "Error al asignar memoria para los pipes.\n");
+        return 1;
     }
 
-    // Procesar la imagen según las opciones
-    if (grayscale_flag) {
-        BMPImage* gray_image = grayscale(image);
-        free_bmp(image);
-        image = gray_image;
+    for (int i = 0; i < workers; i++) {
+        pipes[i] = (int *)malloc(2 * sizeof(int));
+        if (pipes[i] == NULL) {
+            fprintf(stderr, "Error al asignar memoria para el pipe %d.\n", i);
+            return 1;
+        }
+        if (pipe(pipes[i]) == -1) {
+            fprintf(stderr, "Error al crear el pipe %d.\n", i);
+            return 1;
+        }
+
+        int pid = fork();
+        if (pid == -1) {
+            fprintf(stderr, "Error al crear el proceso hijo.\n");
+            return 1;
+        } else if (pid == 0) { // Proceso hijo
+            close(pipes[i][1]); // Cerrar el lado de escritura del pipe en el hijo
+
+            // Leer el nombre del archivo desde el pipe
+            char filename[256];
+            read(pipes[i][0], filename, sizeof(filename));
+
+            // Procesar la imagen
+            BMPImage* image = read_bmp(filename);
+            if (image == NULL) {
+                fprintf(stderr, "Error al leer el archivo BMP %s\n", filename);
+                exit(EXIT_FAILURE);
+            }
+
+            if (filters & 0x1) { // Filtro de saturación
+                BMPImage* sat_image = saturate_bmp(image, saturation);
+                free_bmp(image);
+                image = sat_image;
+            }
+
+            if (filters & 0x2) { // Filtro de escala de grises
+                BMPImage* gray_image = grayscale(image);
+                free_bmp(image);
+                image = gray_image;
+            }
+
+            if (filters & 0x4) { // Filtro de binarización
+                BMPImage* bin_image = binarization(image, thresholdbina);
+                free_bmp(image);
+                image = bin_image;
+            }
+
+            // Construir el nombre del archivo de salida
+            char output_filename[256];
+            snprintf(output_filename, sizeof(output_filename), "%s_output.bmp", prefix);
+
+            // Escribir la imagen BMP resultante
+            write_bmp(output_filename, image);
+            free_bmp(image);
+
+            close(pipes[i][0]); // Cerrar el lado de lectura del pipe en el hijo
+            exit(0);
+        } else { // Proceso padre
+            close(pipes[i][0]); // Cerrar el lado de lectura del pipe en el padre
+
+            // Construir el nombre del archivo de entrada
+            char input_filename[256];
+            snprintf(input_filename, sizeof(input_filename), "%s%d.bmp", prefix, i);
+
+            // Escribir el nombre del archivo al pipe
+            write(pipes[i][1], input_filename, strlen(input_filename) + 1);
+            close(pipes[i][1]); // Cerrar el lado de escritura del pipe en el padre
+        }
     }
 
-    if (binarization_flag) {
-        BMPImage* bin_image = binarization(image, umbral);
-        free_bmp(image);
-        image = bin_image;
+    // Esperar a que todos los procesos hijos terminen
+    for (int i = 0; i < workers; i++) {
+        wait(NULL);
     }
 
-    if (saturation_flag) {
-        BMPImage* sat_image = saturate_bmp(image, factor);
-        free_bmp(image);
-        image = sat_image;
+    // Liberar memoria asignada
+    for (int i = 0; i < workers; i++) {
+        free(pipes[i]);
     }
-
-    // Escribir la imagen BMP resultante
-    write_bmp(output_file, image);
-
-    // Liberar la memoria de la imagen
-    free_bmp(image);
+    free(pipes);
+    free(prefix);
 
     return 0;
 }
