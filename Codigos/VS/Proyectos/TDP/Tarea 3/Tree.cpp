@@ -2,17 +2,17 @@
 
 Tree::Tree(Node* n){
 
-    this->root = *n;
-    this->best = *n;
+    this->root = n;
+    this->best = n;
     this->generated.insert(n);
     
 }
 
-Node Tree::getRoot(){
+Node* Tree::getRoot(){
     return this->root;
 }
 
-Node Tree::getBest(){
+Node* Tree::getBest(){
     return this->best;
 } 
 
@@ -20,11 +20,11 @@ set<Node*> Tree::getGenerated(){
     return this->generated;
 }
 
-void Tree::setRoot(Node newRoot){
+void Tree::setRoot(Node* newRoot){
     root = newRoot;
 }
 
-void Tree::setBest(Node newBest){
+void Tree::setBest(Node* newBest){
     best = newBest;
 }
 
@@ -42,21 +42,21 @@ void Tree::getBound(){
     aux.getBranch();
     generated.erase(generated.begin());
     /*
-    if(aux->getLeft() != nullptr && aux->getLeft()->getSolutionVector()[0] < best->getSolutionVector()[0]){
+    if(aux.getLeft() != nullptr && aux.getLeft()->getSolutionVector()[0] < best->getSolutionVector()[0]){
 
-        if(aux->getLeft()->getZinf() > best->getSolutionVector()[0]){
+        if(aux.getLeft()->getZinf() > best->getSolutionVector()[0]){
 
-            best = aux->getLeft();
+            best = aux.getLeft();
         }
-        generated.push_back((aux->getLeft()));
+        generated.insert((aux.getLeft()));
     }
-    if(aux->getRight() != nullptr && aux->getRight()->getSolutionVector()[0] < best->getSolutionVector()[0]){
+    if(aux.getRight() != nullptr && aux.getRight()->getSolutionVector()[0] < best->getSolutionVector()[0]){
 
-        if(aux->getRight()->getZinf() > best->getSolutionVector()[0]){
+        if(aux.getRight()->getZinf() > best->getSolutionVector()[0]){
 
-            best = aux->getRight();
+            best = aux.getRight();
         }
-        generated.push_back((aux->getRight()));
+        generated.insert((aux.getRight()));
     }
     */
     getBound();

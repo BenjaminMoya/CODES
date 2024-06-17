@@ -9,7 +9,7 @@ int main() {
     n->getFirstMatrix(filename);
     Tree t = Tree(n);
     clock_t start = clock(); //Medicion temporal
-    //t.getBound();
+    t.getBound();
     clock_t end = clock();
     double elapsed = end - start;
     return 0;
