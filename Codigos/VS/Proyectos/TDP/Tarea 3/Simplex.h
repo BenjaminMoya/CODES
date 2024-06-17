@@ -1,11 +1,13 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <string>
 #include <fstream>
 #include <set>
 #include <sstream>
 #include <cmath>
 #include <utility>
+#include <ctime>
 #define EPS 1.0e-6
 
 /*
@@ -42,7 +44,7 @@ public:
     ~Simplex();
     std::vector<float> solve(); // el retorno es [Z, x1, x2, ..., xn]
     void insertConstraint(float b, int var, int type);
-    Simplex copy();
+    Simplex* copy();
     std::vector<float> getSolution();
     void printProblemMatrix();
     void printSolution();

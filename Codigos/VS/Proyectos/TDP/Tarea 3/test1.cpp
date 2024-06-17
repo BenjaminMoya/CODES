@@ -1,4 +1,4 @@
-#include "Node.h"
+#include "Tree.h"
 
 using namespace std;
 
@@ -6,19 +6,15 @@ int main() {
     
     Node* n = new Node();
     char filename[10] = "P1.txt";
-    Simplex s = Simplex(filename);
+    Simplex* s = new Simplex(filename);
     n->getFirstMatrix(filename);
-    for(auto x : n->getSolutionVector()) {
-        cout << x << " " ;
-    }
-    cout << endl;
-    n->getBranch(s);
-    for(auto x : (n->getLeft())->getSolutionVector()) {
-        cout << x << " " ;
-    }
-    cout << endl;
-    for(auto x : (n->getRight())->getSolutionVector()) {
-        cout << x << " " ;
+    Tree t = Tree(n);
+    clock_t start = clock(); //Medicion temporal
+    t.getBound();
+    clock_t end = clock();
+    double elapsed = end - start;
+    for(auto x : t.getRoot()->getSolutionVector()){
+        cout << x << " ";
     }
     return 0;
 

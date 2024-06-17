@@ -1,9 +1,11 @@
 #include "Tree.h"
 
-Tree::Tree(){
+Tree::Tree(Node* n){
 
-    this->root = NULL;
-    this->best = NULL;
+    this->root = n;
+    this->best = nullptr;
+    this->generated.push_back(*n);
+    
 }
 
 Node* Tree::getRoot(){
@@ -14,19 +16,50 @@ Node* Tree::getBest(){
     return this->best;
 } 
 
-vector<Node> Tree::getNodes(){
-    return this->nodes;
+vector<Node> Tree::getGenerated(){
+    return this->generated;
 }
 
-void Tree::setRoot(Node* root){
-    this->root = root;
+void Tree::setRoot(Node* newRoot){
+    root = newRoot;
 }
 
-void Tree::setBest(Node* best){
-    this->best = best;
+void Tree::setBest(Node* newBest){
+    best = newBest;
 }
 
-void Tree::setNodes(vector<Node> nodes){
-    this->nodes = nodes;
+void Tree::setGenerated(vector<Node> newNodes){
+    generated = newNodes;
 }
 
+void Tree::getBound(){
+
+    if(generated.empty()){
+
+        return;
+    }
+    Node aux = generated[0];
+    Simplex* s = aux.getSolve();
+    aux.getBranch(s);
+    generated.erase(generated.begin());
+    delete s;
+    /*
+    if(aux->getLeft() != nullptr && aux->getLeft()->getSolutionVector()[0] < best->getSolutionVector()[0]){
+
+        if(aux->getLeft()->getZinf() > best->getSolutionVector()[0]){
+
+            best = aux->getLeft();
+        }
+        generated.push_back((aux->getLeft()));
+    }
+    if(aux->getRight() != nullptr && aux->getRight()->getSolutionVector()[0] < best->getSolutionVector()[0]){
+
+        if(aux->getRight()->getZinf() > best->getSolutionVector()[0]){
+
+            best = aux->getRight();
+        }
+        generated.push_back((aux->getRight()));
+    }
+    */
+    getBound();
+}

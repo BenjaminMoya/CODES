@@ -5,8 +5,9 @@ class Node{
 
     private:
 
-        vector<vector<float>>solutionMatrix;
+        vector<vector<float>> solutionMatrix;
         vector<float> solutionVector;
+        Simplex* solve;
         float zinf;
         float zsup;
         Node* parent;
@@ -23,6 +24,7 @@ class Node{
         Node* getParent();
         Node* getLeft();
         Node* getRight();
+        Simplex* getSolve();
         void setSolutionMatrix(vector<vector<float>> m);
         void setSolutionVector(vector<float> v);
         void setZinf(float zinf);
@@ -30,9 +32,9 @@ class Node{
         void setParent(Node* parent);
         void setLeft(Node* left);
         void setRight(Node* right);
+        void setSolve(Simplex *s);
         void getFirstMatrix(char *filename);
         int worstFractionary(vector<float> f);
-        void getBranch(Simplex s1);
+        void getBranch(Simplex* s1);;
         
-
 };

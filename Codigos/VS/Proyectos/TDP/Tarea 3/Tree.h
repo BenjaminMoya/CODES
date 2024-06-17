@@ -6,15 +6,17 @@ class Tree{
 
         Node* root;
         Node* best;
-        vector<Node> nodes;
+        vector<Node> generated;
+
     public:
     
-        Tree();
+        Tree(Node* n);
         Node* getRoot();
         Node* getBest();
-        vector<Node> getNodes();
-        void setRoot(Node* root);  
-        void setBest(Node* best);
-        void setNodes(vector<Node> nodes);
+        vector<Node> getGenerated();
+        void setRoot(Node *newRoot);  
+        void setBest(Node *newBest);
+        void setGenerated(vector<Node> newNodes);
+        void getBound();
 
 };

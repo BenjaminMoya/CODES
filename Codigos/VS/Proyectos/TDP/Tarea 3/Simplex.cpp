@@ -511,15 +511,15 @@ void Simplex::insertConstraint(float b, int var, int type)
     Retorno: El objeto creado con los valores
         del objeto copiado.
 */
-Simplex Simplex::copy()
+Simplex* Simplex::copy()
 {
-    Simplex s = Simplex(initialA, m1, m2, m3);
-    s.izrov = this->izrov;
-    s.iposv = this->iposv;
-    s.isSolved = this->isSolved;
-    s.icase = this->icase;
-    s.a = this->a;
-    s.solution = this->solution;
+    Simplex* s = new Simplex(initialA, m1, m2, m3);
+    s->izrov = this->izrov;
+    s->iposv = this->iposv;
+    s->isSolved = this->isSolved;
+    s->icase = this->icase;
+    s->a = this->a;
+    s->solution = this->solution;
     return s;
 }
 
