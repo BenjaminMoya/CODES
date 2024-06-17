@@ -3,7 +3,6 @@
 Tree::Tree(Node* n){
 
     this->root = n;
-    this->best = n;
     this->generated.insert(n);
     
 }
@@ -38,26 +37,30 @@ void Tree::getBound(){
 
         return;
     }
-    Node aux = **generated.begin();
-    aux.getBranch();
-    generated.erase(generated.begin());
-    /*
-    if(aux.getLeft() != nullptr && aux.getLeft()->getSolutionVector()[0] < best->getSolutionVector()[0]){
 
-        if(aux.getLeft()->getZinf() > best->getSolutionVector()[0]){
+    while(!generated.empty()){
 
-            best = aux.getLeft();
+        set<Node*>::iterator it = generated.begin();
+        Node aux = **(it);
+        aux.getBranch();
+        if(aux.getLeft() != nullptr && aux.getLeft()->getZsup() >= best->getSolutionVector()[0]){
+
+            if(aux.getLeft()->getZinf() > best->getSolutionVector()[0] || (!(best->integerSolution()) && aux.getLeft()->integerSolution())){
+
+                best = aux.getLeft();
+            }
+            generated.insert((aux.getLeft()));
         }
-        generated.insert((aux.getLeft()));
-    }
-    if(aux.getRight() != nullptr && aux.getRight()->getSolutionVector()[0] < best->getSolutionVector()[0]){
+        if(aux.getRight() != nullptr && aux.getRight()->getZsup() >= best->getSolutionVector()[0]){
 
-        if(aux.getRight()->getZinf() > best->getSolutionVector()[0]){
+            if(aux.getRight()->getZinf() > best->getSolutionVector()[0] || (!(best->integerSolution()) && aux.getRight()->integerSolution())){
 
-            best = aux.getRight();
+                best = aux.getRight();
+            }
+            generated.insert((aux.getRight()));
         }
-        generated.insert((aux.getRight()));
+        generated.erase(it);
+
     }
-    */
-    getBound();
+    
 }

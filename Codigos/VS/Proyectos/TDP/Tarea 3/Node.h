@@ -9,7 +9,6 @@ class Node{
         Simplex solve;
         float zinf;
         float zsup;
-        Node* parent;
         Node* left;
         Node* right;
 
@@ -32,6 +31,8 @@ class Node{
         void setRight(Node* newRight);
         void getFirstMatrix(char *filename);
         int worstFractionary(vector<float> f);
+        void limits();
+        bool integerSolution();
         void getBranch();
         
 };

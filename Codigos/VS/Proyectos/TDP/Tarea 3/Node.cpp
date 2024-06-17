@@ -2,7 +2,6 @@
 
 Node::Node(){
 
-    this->parent = nullptr;
     this->left = nullptr;
     this->right = nullptr;
 
@@ -18,10 +17,6 @@ float Node::getZinf(){
 
 float Node::getZsup(){
     return this->zsup;
-}
-
-Node* Node::getParent(){
-    return this->parent;
 }
 
 Node* Node::getLeft(){
@@ -48,10 +43,6 @@ void Node::setZsup(float newZsup){
     this->zsup = newZsup;
 }
 
-void Node::setParent(Node* newParent){
-    this->parent = newParent;
-}
-
 void Node::setLeft(Node* newLeft){
     this->left = newLeft;
 }
@@ -74,6 +65,26 @@ void Node::getFirstMatrix(char* filename){
     return;
 }
 
+void Node::limits(){
+
+    zinf = floor(solutionVector[0]);
+    zsup = solutionVector[0];
+    return;
+}
+
+bool Node::integerSolution(){
+
+    for(int i = 1; i<solutionVector.size();i++){
+
+        if(fmod(solutionVector[i],1.0)!=0){
+
+            return false;
+        }
+    }
+
+    return true;
+
+}
 int Node::worstFractionary(vector<float> f){
     
     float worst = 0;
@@ -100,6 +111,11 @@ void Node::getBranch(){
     int worstpos = worstFractionary(solutionVector);
     float up = ceil(solutionVector[worstpos]);
     float down = floor(solutionVector[worstpos]);
+    if(floor(solutionVector[worstpos])==solutionVector[worstpos]){
+
+        return;
+    }
+
     s1.insertConstraint(down,worstpos,1);
     n1->setSolve(s1);
     n1->setSolutionVector(s1.solve());
@@ -107,10 +123,9 @@ void Node::getBranch(){
 
         left = nullptr;
         delete n1;
-    } else {
+    } 
+    n1->limits();
 
-        n1->setParent(this);
-    }
     s2.insertConstraint(up,worstpos,2);
     n2->setSolve(s2);
     n2->setSolutionVector(s2.solve());
@@ -118,10 +133,9 @@ void Node::getBranch(){
 
         right = nullptr;
         delete n2;
-    } else {
+    }
+    n2->limits();
 
-        n2->setParent(this);
-    } 
     return;
 
 }

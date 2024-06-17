@@ -12,6 +12,9 @@ int main() {
     t.getBound();
     clock_t end = clock();
     double elapsed = end - start;
+    for(auto x : t.getBest()->getSolutionVector()){
+        cout << x << " ";
+    }
     return 0;
 
 }
