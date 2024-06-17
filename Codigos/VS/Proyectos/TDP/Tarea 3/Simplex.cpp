@@ -1,5 +1,15 @@
 #include "Simplex.h"
 
+Simplex::Simplex()
+{
+    this->m = 0;
+    this->n = 0;
+    this->m1 = 0;
+    this->m2 = 0;
+    this->m3 = 0;
+    this->isSolved = false;
+}
+
 /*
     Metodo: Constructor
     Descripcion: este metodo permite iniciar un Simplex, recibiendo
@@ -511,15 +521,15 @@ void Simplex::insertConstraint(float b, int var, int type)
     Retorno: El objeto creado con los valores
         del objeto copiado.
 */
-Simplex* Simplex::copy()
+Simplex Simplex::copy()
 {
-    Simplex* s = new Simplex(initialA, m1, m2, m3);
-    s->izrov = this->izrov;
-    s->iposv = this->iposv;
-    s->isSolved = this->isSolved;
-    s->icase = this->icase;
-    s->a = this->a;
-    s->solution = this->solution;
+    Simplex s = Simplex(initialA, m1, m2, m3);
+    s.izrov = this->izrov;
+    s.iposv = this->iposv;
+    s.isSolved = this->isSolved;
+    s.icase = this->icase;
+    s.a = this->a;
+    s.solution = this->solution;
     return s;
 }
 

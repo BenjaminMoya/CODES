@@ -2,33 +2,33 @@
 
 Tree::Tree(Node* n){
 
-    this->root = n;
-    this->best = nullptr;
-    this->generated.push_back(*n);
+    this->root = *n;
+    this->best = *n;
+    this->generated.insert(n);
     
 }
 
-Node* Tree::getRoot(){
+Node Tree::getRoot(){
     return this->root;
 }
 
-Node* Tree::getBest(){
+Node Tree::getBest(){
     return this->best;
 } 
 
-vector<Node> Tree::getGenerated(){
+set<Node*> Tree::getGenerated(){
     return this->generated;
 }
 
-void Tree::setRoot(Node* newRoot){
+void Tree::setRoot(Node newRoot){
     root = newRoot;
 }
 
-void Tree::setBest(Node* newBest){
+void Tree::setBest(Node newBest){
     best = newBest;
 }
 
-void Tree::setGenerated(vector<Node> newNodes){
+void Tree::setGenerated(set<Node*> newNodes){
     generated = newNodes;
 }
 
@@ -38,11 +38,9 @@ void Tree::getBound(){
 
         return;
     }
-    Node aux = generated[0];
-    Simplex* s = aux.getSolve();
-    aux.getBranch(s);
+    Node aux = **generated.begin();
+    aux.getBranch();
     generated.erase(generated.begin());
-    delete s;
     /*
     if(aux->getLeft() != nullptr && aux->getLeft()->getSolutionVector()[0] < best->getSolutionVector()[0]){
 
