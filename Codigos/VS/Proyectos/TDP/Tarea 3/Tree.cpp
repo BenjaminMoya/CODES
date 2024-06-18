@@ -50,44 +50,19 @@ void Tree::getBound(){
     while(!generated.empty()){
 
         set<Node*>::iterator it = generated.begin();
-        Node aux = **(it);
-        aux.getBranch();
-        for(auto x: aux.getSolutionVector()){
+        Node* aux = *(it);
+        aux->getBranch();
+        for(auto x: aux->getSolutionVector()){
 
             cout << x << " ";
         }
         cout << endl;
-        if(aux.getLeft() != nullptr && aux.getRight() != nullptr){
+        if(aux->getLeft() != nullptr && aux->getRight() != nullptr){
 
-            Node *temp = aux.compare(aux.getLeft(),aux.getRight());
+            Node temp = aux->compare(aux->getLeft(),aux->getRight());
             if(best == nullptr){
 
-                best = temp;
-                if(temp->integerSolution()){
-
-                    bestInteger = temp;
-                }
-                generated.insert(temp);
-
-            } else if(best!=nullptr){
-
-                if(best->getZinf() < temp->getZsup()){
-
-                    if((temp->integerSolution()) && bestInteger->getZsup() < temp->getZsup()){
-
-                        bestInteger = temp;
-                    }
-                    generated.insert(temp);
-                }
-            }
-            delete temp;
-        }
-
-        if(aux.getLeft() != nullptr && aux.getRight() == nullptr){
-
-            if(best == nullptr){
-
-                best = aux.getLeft();
+                best = &temp;
                 if(best->integerSolution()){
 
                     bestInteger = best;
@@ -96,22 +71,28 @@ void Tree::getBound(){
 
             } else if(best!=nullptr){
 
-                if(best->getZinf() < aux.getLeft()->getZsup()){
+                if(best->getZinf() < temp.getZsup()){
 
-                    if((aux.getLeft()->integerSolution()) && bestInteger->getZsup() < aux.getLeft()->getZsup()){
+                    if(best->getZsup() < temp.getZsup()){
 
-                        bestInteger = aux.getLeft();
+                        best = &temp;
                     }
-                    generated.insert(aux.getLeft());
+
+                    if((temp.integerSolution()) && bestInteger->getZsup() < temp.getZsup()){
+
+                        bestInteger = &temp;
+                    }
+                    
+                    generated.insert(&temp);
                 }
             }
         }
 
-        if(aux.getRight() != nullptr && aux.getLeft() == nullptr){
+        if(aux->getLeft() != nullptr && aux->getRight() == nullptr){
 
             if(best == nullptr){
 
-                best = aux.getRight();
+                best = aux->getLeft();
                 if(best->integerSolution()){
 
                     bestInteger = best;
@@ -120,18 +101,43 @@ void Tree::getBound(){
 
             } else if(best!=nullptr){
 
-                if(best->getZinf() < aux.getRight()->getZsup()){
+                if(best->getZinf() < aux->getLeft()->getZsup()){
 
-                    if((aux.getRight()->integerSolution()) && bestInteger->getZsup() < aux.getRight()->getZsup()){
+                    if((aux->getLeft()->integerSolution()) && bestInteger->getZsup() < aux->getLeft()->getZsup()){
 
-                        bestInteger = aux.getRight();
+                        bestInteger = aux->getLeft();
                     }
-                    generated.insert(aux.getRight());
+                    generated.insert(aux->getLeft());
                 }
             }
         }
+
+        if(aux->getRight() != nullptr && aux->getLeft() == nullptr){
+
+            if(best == nullptr){
+
+                best = aux->getRight();
+                if(best->integerSolution()){
+
+                    bestInteger = best;
+                }
+                generated.insert(best);
+
+            } else if(best!=nullptr){
+
+                if(best->getZinf() < aux->getRight()->getZsup()){
+
+                    if((aux->getRight()->integerSolution()) && bestInteger->getZsup() < aux->getRight()->getZsup()){
+
+                        bestInteger = aux->getRight();
+                    }
+                    generated.insert(aux->getRight());
+                }
+            }
+        }
+
         generated.erase(it);
-        
+
     }
     
 }

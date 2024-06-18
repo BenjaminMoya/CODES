@@ -156,17 +156,17 @@ void Node::getBranch(){
 
 }
 
-Node* Node::compare(Node *n1,Node *n2){
+Node Node::compare(Node* n1,Node* n2){
 
     if(n1->getZinf() > n2->getZsup()){
 
-        return n1;
+        return *n1;
     } else if(n2->getZinf() > n1->getZsup()){
 
-        return n2;
+        return *n2;
     } else {
 
-        return n1;
+        return *n1;
     }
 }
 

@@ -37,6 +37,6 @@ class Node{
         void limits();
         bool integerSolution();
         void getBranch();
-        Node* compare(Node *n1,Node *n2);
+        Node compare(Node *n1,Node *n2);
         
 };
