@@ -12,7 +12,7 @@ int main() {
     t.getBound();
     clock_t end = clock();
     double elapsed = end - start;
-    for(auto x : t.getBest()->getSolutionVector()){
+    for(auto x : t.getBestInteger()->getSolutionVector()){
         cout << x << " ";
     }
     return 0;

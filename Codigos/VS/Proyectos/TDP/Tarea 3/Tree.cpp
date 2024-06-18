@@ -3,6 +3,7 @@
 Tree::Tree(Node* n){
 
     this->root = n;
+    this->best = nullptr;
     this->generated.insert(n);
     
 }
@@ -15,6 +16,10 @@ Node* Tree::getBest(){
     return this->best;
 } 
 
+Node* Tree::getBestInteger(){
+    return this->bestInteger;
+}
+
 set<Node*> Tree::getGenerated(){
     return this->generated;
 }
@@ -25,6 +30,10 @@ void Tree::setRoot(Node* newRoot){
 
 void Tree::setBest(Node* newBest){
     best = newBest;
+}
+
+void Tree::setBestInteger(Node* newBestInteger){
+    bestInteger = newBestInteger;
 }
 
 void Tree::setGenerated(set<Node*> newNodes){
@@ -43,24 +52,86 @@ void Tree::getBound(){
         set<Node*>::iterator it = generated.begin();
         Node aux = **(it);
         aux.getBranch();
-        if(aux.getLeft() != nullptr && aux.getLeft()->getZsup() >= best->getSolutionVector()[0]){
+        for(auto x: aux.getSolutionVector()){
 
-            if(aux.getLeft()->getZinf() > best->getSolutionVector()[0] || (!(best->integerSolution()) && aux.getLeft()->integerSolution())){
+            cout << x << " ";
+        }
+        cout << endl;
+        if(aux.getLeft() != nullptr && aux.getRight() != nullptr){
+
+            Node *temp = aux.compare(aux.getLeft(),aux.getRight());
+            if(best == nullptr){
+
+                best = temp;
+                if(temp->integerSolution()){
+
+                    bestInteger = temp;
+                }
+                generated.insert(temp);
+
+            } else if(best!=nullptr){
+
+                if(best->getZinf() < temp->getZsup()){
+
+                    if((temp->integerSolution()) && bestInteger->getZsup() < temp->getZsup()){
+
+                        bestInteger = temp;
+                    }
+                    generated.insert(temp);
+                }
+            }
+            delete temp;
+        }
+
+        if(aux.getLeft() != nullptr && aux.getRight() == nullptr){
+
+            if(best == nullptr){
 
                 best = aux.getLeft();
-            }
-            generated.insert((aux.getLeft()));
-        }
-        if(aux.getRight() != nullptr && aux.getRight()->getZsup() >= best->getSolutionVector()[0]){
+                if(best->integerSolution()){
 
-            if(aux.getRight()->getZinf() > best->getSolutionVector()[0] || (!(best->integerSolution()) && aux.getRight()->integerSolution())){
+                    bestInteger = best;
+                }
+                generated.insert(best);
+
+            } else if(best!=nullptr){
+
+                if(best->getZinf() < aux.getLeft()->getZsup()){
+
+                    if((aux.getLeft()->integerSolution()) && bestInteger->getZsup() < aux.getLeft()->getZsup()){
+
+                        bestInteger = aux.getLeft();
+                    }
+                    generated.insert(aux.getLeft());
+                }
+            }
+        }
+
+        if(aux.getRight() != nullptr && aux.getLeft() == nullptr){
+
+            if(best == nullptr){
 
                 best = aux.getRight();
+                if(best->integerSolution()){
+
+                    bestInteger = best;
+                }
+                generated.insert(best);
+
+            } else if(best!=nullptr){
+
+                if(best->getZinf() < aux.getRight()->getZsup()){
+
+                    if((aux.getRight()->integerSolution()) && bestInteger->getZsup() < aux.getRight()->getZsup()){
+
+                        bestInteger = aux.getRight();
+                    }
+                    generated.insert(aux.getRight());
+                }
             }
-            generated.insert((aux.getRight()));
         }
         generated.erase(it);
-
+        
     }
     
 }

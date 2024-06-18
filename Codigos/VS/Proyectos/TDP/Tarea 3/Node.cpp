@@ -31,6 +31,10 @@ Simplex Node::getSolve(){
     return this->solve;
 }
 
+bool Node::getIntegerSolve(){
+    return this->integerSolve;
+}
+
 void Node::setSolutionVector(vector<float> newSolutionVector){
     this->solutionVector = newSolutionVector;
 }
@@ -53,6 +57,10 @@ void Node::setRight(Node* newRight){
 
 void Node::setSolve(Simplex newS){
     this->solve = newS;
+}
+
+void Node::setIntegerSolve(bool newIntegerSolve){
+    this->integerSolve = newIntegerSolve;
 }
 
 void Node::getFirstMatrix(char* filename){
@@ -125,6 +133,10 @@ void Node::getBranch(){
         delete n1;
     } 
     n1->limits();
+    if(n1->integerSolution()){
+
+        n1->setIntegerSolve(true);
+    }
 
     s2.insertConstraint(up,worstpos,2);
     n2->setSolve(s2);
@@ -135,10 +147,26 @@ void Node::getBranch(){
         delete n2;
     }
     n2->limits();
+    if(n2->integerSolution()){
+
+        n2->setIntegerSolve(true);
+    }
 
     return;
 
 }
 
+Node* Node::compare(Node *n1,Node *n2){
 
+    if(n1->getZinf() > n2->getZsup()){
+
+        return n1;
+    } else if(n2->getZinf() > n1->getZsup()){
+
+        return n2;
+    } else {
+
+        return n1;
+    }
+}
 
