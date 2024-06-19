@@ -51,36 +51,36 @@ void Tree::getBound(){
 
         set<Node*>::iterator it = generated.begin();
         Node* aux = *(it);
-        aux->getBranch();
-        for(auto x: aux->getSolutionVector()){
+        for(auto x: aux->getSimplex().getSolution()){
 
             cout << x << " ";
         }
         cout << endl;
+        aux->getBranch();
         if(aux->getLeft() != nullptr && aux->getRight() != nullptr){
 
             Node temp = aux->compare(aux->getLeft(),aux->getRight());
             if(best == nullptr){
 
-                best = &temp;
+                setBest(&temp);
                 if(best->integerSolution()){
 
-                    bestInteger = best;
+                    setBestInteger(best);
                 }
                 generated.insert(best);
 
-            } else if(best!=nullptr){
+            } else if (best!=nullptr){
 
                 if(best->getZinf() < temp.getZsup()){
 
                     if(best->getZsup() < temp.getZsup()){
 
-                        best = &temp;
+                        setBest(&temp);
                     }
 
                     if((temp.integerSolution()) && bestInteger->getZsup() < temp.getZsup()){
 
-                        bestInteger = &temp;
+                        setBestInteger(&temp);
                     }
                     
                     generated.insert(&temp);
@@ -92,20 +92,20 @@ void Tree::getBound(){
 
             if(best == nullptr){
 
-                best = aux->getLeft();
+                setBest(aux->getLeft());
                 if(best->integerSolution()){
 
-                    bestInteger = best;
+                    setBestInteger(best);
                 }
                 generated.insert(best);
 
-            } else if(best!=nullptr){
+            } else if (best!=nullptr){
 
                 if(best->getZinf() < aux->getLeft()->getZsup()){
 
                     if((aux->getLeft()->integerSolution()) && bestInteger->getZsup() < aux->getLeft()->getZsup()){
 
-                        bestInteger = aux->getLeft();
+                        setBestInteger(aux->getLeft());
                     }
                     generated.insert(aux->getLeft());
                 }
@@ -116,20 +116,20 @@ void Tree::getBound(){
 
             if(best == nullptr){
 
-                best = aux->getRight();
+                setBest(aux->getRight());
                 if(best->integerSolution()){
 
-                    bestInteger = best;
+                    setBestInteger(best);
                 }
                 generated.insert(best);
 
-            } else if(best!=nullptr){
+            } else if (best!=nullptr){
 
                 if(best->getZinf() < aux->getRight()->getZsup()){
 
                     if((aux->getRight()->integerSolution()) && bestInteger->getZsup() < aux->getRight()->getZsup()){
 
-                        bestInteger = aux->getRight();
+                        setBestInteger(aux->getRight());
                     }
                     generated.insert(aux->getRight());
                 }
@@ -138,6 +138,18 @@ void Tree::getBound(){
 
         generated.erase(it);
 
+    }
+    
+}
+
+Tree::~Tree(){
+    
+    delete root;
+    delete best;
+    delete bestInteger;
+    for(auto x: generated){
+        
+        delete x;
     }
     
 }

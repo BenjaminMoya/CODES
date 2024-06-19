@@ -4,17 +4,15 @@ using namespace std;
 
 int main() {
     
-    Node* n = new Node();
     char filename[10] = "P1.txt";
-    n->getFirstMatrix(filename);
+    Simplex s = Simplex("P1.txt");
+    Node* n = new Node(s);
+    n->getFirstMatrix(s);
     Tree t = Tree(n);
     clock_t start = clock(); //Medicion temporal
     t.getBound();
     clock_t end = clock();
     double elapsed = end - start;
-    for(auto x : t.getBestInteger()->getSolutionVector()){
-        cout << x << " ";
-    }
     return 0;
 
 }

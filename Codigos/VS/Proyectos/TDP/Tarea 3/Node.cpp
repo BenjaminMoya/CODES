@@ -1,14 +1,18 @@
 #include "Node.h"
 
-Node::Node(){
+Node::Node(Simplex s){
 
+    this->simplex = s;
     this->left = nullptr;
     this->right = nullptr;
 
 }
 
-vector<float> Node::getSolutionVector(){
-    return this->solutionVector;
+Node::Node(){
+
+    this->left = nullptr;
+    this->right = nullptr;
+
 }
 
 float Node::getZinf(){
@@ -27,16 +31,12 @@ Node* Node::getRight(){
     return this->right;
 }
 
-Simplex Node::getSolve(){
-    return this->solve;
+Simplex Node::getSimplex(){
+    return this->simplex;
 }
 
 bool Node::getIntegerSolve(){
     return this->integerSolve;
-}
-
-void Node::setSolutionVector(vector<float> newSolutionVector){
-    this->solutionVector = newSolutionVector;
 }
 
 void Node::setZinf(float newZinf){
@@ -55,36 +55,34 @@ void Node::setRight(Node* newRight){
     this->right = newRight;
 }
 
-void Node::setSolve(Simplex newS){
-    this->solve = newS;
+void Node::setSimplex(Simplex newSimplex){
+    this->simplex = newSimplex;
 }
 
 void Node::setIntegerSolve(bool newIntegerSolve){
     this->integerSolve = newIntegerSolve;
 }
 
-void Node::getFirstMatrix(char* filename){
+void Node::getFirstMatrix(Simplex s){
 
-    Simplex s1 = Simplex(filename);
-    solutionVector = s1.solve();
-    zinf = floor(solutionVector[0]);
-    zsup = solutionVector[0];
-    solve = s1;
+    simplex.solve();
+    zinf = floor(simplex.getSolution()[0]);
+    zsup = simplex.getSolution()[0];
     return;
 }
 
 void Node::limits(){
 
-    zinf = floor(solutionVector[0]);
-    zsup = solutionVector[0];
+    zinf = floor(simplex.getSolution()[0]);
+    zsup = simplex.getSolution()[0];
     return;
 }
 
 bool Node::integerSolution(){
 
-    for(int i = 1; i<solutionVector.size();i++){
+    for(int i = 1; i<simplex.getSolution().size();i++){
 
-        if(fmod(solutionVector[i],1.0)!=0){
+        if(fmod(simplex.getSolution()[i],1.0)!=0){
 
             return false;
         }
@@ -95,7 +93,7 @@ bool Node::integerSolution(){
 }
 int Node::worstFractionary(vector<float> f){
     
-    float worst = 0;
+    int worst = 0;
     for(int i = 1; i<f.size();i++){
 
         if(0.5-fmod(worst,1.0)>0.5-fmod(f[i],1.0)){
@@ -112,44 +110,44 @@ void Node::getBranch(){
 
     Node* n1 = new Node();
     Node* n2 = new Node();
-    Simplex s1 = solve.copy();
-    Simplex s2 = solve.copy();
     left = n1;
     right = n2;
-    int worstpos = worstFractionary(solutionVector);
-    float up = ceil(solutionVector[worstpos]);
-    float down = floor(solutionVector[worstpos]);
-    if(floor(solutionVector[worstpos])==solutionVector[worstpos]){
+    int worstpos = worstFractionary(simplex.getSolution());
+    float up = ceil(simplex.getSolution()[worstpos]);
+    float down = floor(simplex.getSolution()[worstpos]);
+    if(floor(simplex.getSolution()[worstpos])==simplex.getSolution()[worstpos]){
 
         return;
     }
 
-    s1.insertConstraint(down,worstpos,1);
-    n1->setSolve(s1);
-    n1->setSolutionVector(s1.solve());
-    if(n1->getSolutionVector().empty()){
+    n1->setSimplex(simplex);
+    n1->simplex.insertConstraint(down,worstpos,1);
+    n1->simplex.solve();
+    if(n1->simplex.getSolution().empty()){
 
         left = nullptr;
         delete n1;
-    } 
-    n1->limits();
-    if(n1->integerSolution()){
+    } else {
+        n1->limits();
+        if(n1->integerSolution()){
 
-        n1->setIntegerSolve(true);
+            n1->setIntegerSolve(true);
+        }
     }
 
-    s2.insertConstraint(up,worstpos,2);
-    n2->setSolve(s2);
-    n2->setSolutionVector(s2.solve());
-    if(n2->getSolutionVector().empty()){
+    n2->setSimplex(simplex);
+    n2->simplex.insertConstraint(up,worstpos,2);
+    n2->simplex.solve();
+    if(n2->simplex.getSolution().empty()){
 
-        right = nullptr;
+        left = nullptr;
         delete n2;
-    }
-    n2->limits();
-    if(n2->integerSolution()){
+    } else {
+        n2->limits();
+        if(n2->integerSolution()){
 
-        n2->setIntegerSolve(true);
+            n2->setIntegerSolve(true);
+        }
     }
 
     return;
@@ -170,3 +168,11 @@ Node Node::compare(Node* n1,Node* n2){
     }
 }
 
+void getBound(){
+
+    //Falta hacer esta funcion sin necesidad de tener un contendor como tree y poder ahorrar memoria :p
+}
+Node::~Node(){
+    delete left;
+    delete right;
+}

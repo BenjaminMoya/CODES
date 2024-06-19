@@ -21,5 +21,6 @@ class Tree{
         void setGenerated(set<Node*> newNodes);
         void setBestInteger(Node* newBestInteger);  
         void getBound();
+        ~Tree();
 
 };

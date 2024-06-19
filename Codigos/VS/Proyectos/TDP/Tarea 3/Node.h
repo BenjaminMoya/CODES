@@ -5,8 +5,7 @@ class Node{
 
     private:
 
-        vector<float> solutionVector;
-        Simplex solve;
+        Simplex simplex;
         float zinf;
         float zsup;
         Node* left;
@@ -15,28 +14,28 @@ class Node{
 
     public:
 
+        Node(Simplex s);
         Node();
-        vector<float> getSolutionVector();
-        Simplex getSolve();
+        Simplex getSimplex();
         float getZinf();
         float getZsup();
         Node* getParent();
         Node* getLeft();
         Node* getRight();
         bool getIntegerSolve();
-        void setSolutionVector(vector<float> newSolutionVector);
-        void setSolve(Simplex newSolve);
+        void setSimplex(Simplex newSimplex);
         void setZinf(float newZinf);
         void setZsup(float newZsup);
         void setParent(Node* newParent);
         void setLeft(Node* newLeft);
         void setRight(Node* newRight);
         void setIntegerSolve(bool newIntegerSolve);
-        void getFirstMatrix(char *filename);
+        void getFirstMatrix(Simplex s);
         int worstFractionary(vector<float> f);
         void limits();
         bool integerSolution();
         void getBranch();
         Node compare(Node *n1,Node *n2);
+        ~Node();
         
 };
