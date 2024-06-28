@@ -168,68 +168,7 @@ Node Node::compare(Node* n1,Node* n2){
     }
 }
 
-void getBound(set<Node*> generated,Node* best,Node* bestInteger){
-    //finalmente es la misma logica que el original pero recursivamente para no tener una copia de la copia y asi
-    if(generated.empty()){
 
-        return;
-    }
-
-    while(!generated.empty()){
-
-        set<Node*>::iterator it = generated.begin();
-        Node* aux = *(it);
-        for(auto x: aux->getSimplex().getSolution()){
-
-            cout << x << " ";
-        }
-        cout << endl;
-        aux->getBranch();
-        if(aux->getLeft() != nullptr && aux->getRight() != nullptr){
-
-            Node temp = aux->compare(aux->getLeft(),aux->getRight());
-            if(best == nullptr){
-
-                setBest(&temp);
-                if(best->integerSolution()){
-
-                    setBestInteger(best);
-                }
-                generated.insert(best);
-
-            } else if (best!=nullptr){
-
-                if(best->getZinf() < temp.getZsup()){
-
-                    if(best->getZsup() < temp.getZsup()){
-
-                        setBest(&temp);
-                    }
-
-                    if((temp.integerSolution()) && bestInteger->getZsup() < temp.getZsup()){
-
-                        setBestInteger(&temp);
-                    }
-
-                    generated.insert(&temp);
-                }
-            }
-        }
-
-        if(aux->getLeft() != nullptr && aux->getRight() == nullptr){
-
-            if(best == nullptr){
-
-                setBest(aux->getLeft());
-                if(best->integerSolution()){
-
-                    setBestInteger(best);
-                }
-                generated.insert(best);
-            }
-        }
-    }
-}
 Node::~Node(){
     delete left;
     delete right;
