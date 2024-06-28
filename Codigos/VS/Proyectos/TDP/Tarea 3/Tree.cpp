@@ -4,7 +4,7 @@ Tree::Tree(Node* n){
 
     this->root = n;
     this->best = nullptr;
-    this->generated.push_back(*n);
+    this->generated.insert(n);
     
 }
 
@@ -16,7 +16,11 @@ Node* Tree::getBest(){
     return this->best;
 } 
 
-vector<Node> Tree::getGenerated(){
+Node* Tree::getBestInteger(){
+    return this->bestInteger;
+}
+
+set<Node*> Tree::getGenerated(){
     return this->generated;
 }
 
@@ -28,7 +32,11 @@ void Tree::setBest(Node* newBest){
     best = newBest;
 }
 
-void Tree::setGenerated(vector<Node> newNodes){
+void Tree::setBestInteger(Node* newBestInteger){
+    bestInteger = newBestInteger;
+}
+
+void Tree::setGenerated(set<Node*> newNodes){
     generated = newNodes;
 }
 
@@ -38,28 +46,110 @@ void Tree::getBound(){
 
         return;
     }
-    Node aux = generated[0];
-    Simplex* s = aux.getSolve();
-    aux.getBranch(s);
-    generated.erase(generated.begin());
-    delete s;
-    /*
-    if(aux->getLeft() != nullptr && aux->getLeft()->getSolutionVector()[0] < best->getSolutionVector()[0]){
 
-        if(aux->getLeft()->getZinf() > best->getSolutionVector()[0]){
+    while(!generated.empty()){
 
-            best = aux->getLeft();
+        set<Node*>::iterator it = generated.begin();
+        Node* aux = *(it);
+        for(auto x: aux->getSimplex().getSolution()){
+
+            cout << x << " ";
         }
-        generated.push_back((aux->getLeft()));
-    }
-    if(aux->getRight() != nullptr && aux->getRight()->getSolutionVector()[0] < best->getSolutionVector()[0]){
+        cout << endl;
+        aux->getBranch();
+        if(aux->getLeft() != nullptr && aux->getRight() != nullptr){
 
-        if(aux->getRight()->getZinf() > best->getSolutionVector()[0]){
+            Node temp = aux->compare(aux->getLeft(),aux->getRight());
+            if(best == nullptr){
 
-            best = aux->getRight();
+                setBest(&temp);
+                if(best->integerSolution()){
+
+                    setBestInteger(best);
+                }
+                generated.insert(best);
+
+            } else if (best!=nullptr){
+
+                if(best->getZinf() < temp.getZsup()){
+
+                    if(best->getZsup() < temp.getZsup()){
+
+                        setBest(&temp);
+                    }
+
+                    if((temp.integerSolution()) && bestInteger->getZsup() < temp.getZsup()){
+
+                        setBestInteger(&temp);
+                    }
+                    
+                    generated.insert(&temp);
+                }
+            }
         }
-        generated.push_back((aux->getRight()));
+
+        if(aux->getLeft() != nullptr && aux->getRight() == nullptr){
+
+            if(best == nullptr){
+
+                setBest(aux->getLeft());
+                if(best->integerSolution()){
+
+                    setBestInteger(best);
+                }
+                generated.insert(best);
+
+            } else if (best!=nullptr){
+
+                if(best->getZinf() < aux->getLeft()->getZsup()){
+
+                    if((aux->getLeft()->integerSolution()) && bestInteger->getZsup() < aux->getLeft()->getZsup()){
+
+                        setBestInteger(aux->getLeft());
+                    }
+                    generated.insert(aux->getLeft());
+                }
+            }
+        }
+
+        if(aux->getRight() != nullptr && aux->getLeft() == nullptr){
+
+            if(best == nullptr){
+
+                setBest(aux->getRight());
+                if(best->integerSolution()){
+
+                    setBestInteger(best);
+                }
+                generated.insert(best);
+
+            } else if (best!=nullptr){
+
+                if(best->getZinf() < aux->getRight()->getZsup()){
+
+                    if((aux->getRight()->integerSolution()) && bestInteger->getZsup() < aux->getRight()->getZsup()){
+
+                        setBestInteger(aux->getRight());
+                    }
+                    generated.insert(aux->getRight());
+                }
+            }
+        }
+
+        generated.erase(it);
+
     }
-    */
-    getBound();
+    
+}
+
+Tree::~Tree(){
+    
+    delete root;
+    delete best;
+    delete bestInteger;
+    for(auto x: generated){
+        
+        delete x;
+    }
+    
 }

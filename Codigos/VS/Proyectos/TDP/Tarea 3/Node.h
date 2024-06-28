@@ -5,36 +5,40 @@ class Node{
 
     private:
 
-        vector<vector<float>> solutionMatrix;
         vector<float> solutionVector;
-        Simplex* solve;
+        Simplex simplex;
         float zinf;
         float zsup;
-        Node* parent;
         Node* left;
         Node* right;
+        bool integerSolve;
 
     public:
 
-        Node();
-        vector<vector<float>> getSolutionMatrix();
+        Node(Simplex s);
+        Simplex getSimplex();
         vector<float> getSolutionVector();
         float getZinf();
         float getZsup();
-        Node* getParent();
         Node* getLeft();
         Node* getRight();
-        Simplex* getSolve();
-        void setSolutionMatrix(vector<vector<float>> m);
-        void setSolutionVector(vector<float> v);
-        void setZinf(float zinf);
-        void setZsup(float zsup);
-        void setParent(Node* parent);
-        void setLeft(Node* left);
-        void setRight(Node* right);
-        void setSolve(Simplex *s);
-        void getFirstMatrix(char *filename);
+        bool getIntegerSolve();
+        void setSimplex(Simplex newSimplex);
+        void setSolutionVector(vector<float> newSolutionVector);
+        void setZinf(float newZinf);
+        void setZsup(float newZsup);
+        void setParent(Node* newParent);
+        void setLeft(Node* newLeft);
+        void setRight(Node* newRight);
+        void setIntegerSolve(bool newIntegerSolve);
+        void getFirstMatrix(Simplex s);
         int worstFractionary(vector<float> f);
-        void getBranch(Simplex* s1);;
+        void limits();
+        bool integerSolution();
+        void restrictions(int n,int pos,int type);
+        void getSolve();
+        void getBranch();
+        Node compare(Node *n1,Node *n2);
+        ~Node();
         
 };

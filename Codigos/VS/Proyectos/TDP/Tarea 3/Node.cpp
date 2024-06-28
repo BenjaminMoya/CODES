@@ -1,19 +1,11 @@
 #include "Node.h"
 
-Node::Node(){
+Node::Node(Simplex s){
 
-    this->parent = nullptr;
+    this->simplex = s;
     this->left = nullptr;
     this->right = nullptr;
 
-}
-
-vector<vector<float>> Node::getSolutionMatrix(){
-    return this->solutionMatrix;
-}
-
-vector<float> Node::getSolutionVector(){
-    return this->solutionVector;
 }
 
 float Node::getZinf(){
@@ -24,10 +16,6 @@ float Node::getZsup(){
     return this->zsup;
 }
 
-Node* Node::getParent(){
-    return this->parent;
-}
-
 Node* Node::getLeft(){
     return this->left;
 }
@@ -36,54 +24,77 @@ Node* Node::getRight(){
     return this->right;
 }
 
-Simplex* Node::getSolve(){
-    return this->solve;
-}
-void Node::setSolutionMatrix(vector<vector<float>> m){
-    this->solutionMatrix = m;
+Simplex Node::getSimplex(){
+    return this->simplex;
 }
 
-void Node::setSolutionVector(vector<float> v){
-    this->solutionVector = v;
+vector<float> Node::getSolutionVector(){
+    return this->simplex.getSolution();
 }
 
-void Node::setZinf(float zinf){
-    this->zinf = zinf;
+bool Node::getIntegerSolve(){
+    return this->integerSolve;
 }
 
-void Node::setZsup(float zsup){
-    this->zsup = zsup;
+void Node::setZinf(float newZinf){
+    this->zinf = newZinf;
 }
 
-void Node::setParent(Node* parent){
-    this->parent = parent;
+void Node::setZsup(float newZsup){
+    this->zsup = newZsup;
 }
 
-void Node::setLeft(Node* left){
-    this->left = left;
+void Node::setLeft(Node* newLeft){
+    this->left = newLeft;
 }
 
-void Node::setRight(Node* right){
-    this->right = right;
+void Node::setRight(Node* newRight){
+    this->right = newRight;
 }
 
-void Node::setSolve(Simplex *s){
-    this->solve = s;
+void Node::setSimplex(Simplex newSimplex){
+    this->simplex = newSimplex;
 }
-void Node::getFirstMatrix(char* filename){
 
-    Simplex s1 = Simplex(filename);
-    solutionMatrix = s1.initialA;
-    solutionVector = s1.solve();
+void Node::setIntegerSolve(bool newIntegerSolve){
+    this->integerSolve = newIntegerSolve;
+}
+
+void Node::setSolutionVector(vector<float> newSolutionVector){
+    this->solutionVector = newSolutionVector;
+}  
+
+void Node::getFirstMatrix(Simplex s){
+
+    solutionVector = simplex.solve();
     zinf = floor(solutionVector[0]);
     zsup = solutionVector[0];
-    solve = &s1;
     return;
 }
 
+void Node::limits(){
+
+    zinf = floor(solutionVector[0]);
+    zsup = solutionVector[0];
+    return;
+}
+
+bool Node::integerSolution(){
+
+    for(int i = 1; i<solutionVector.size();i++){
+
+        if(fmod(solutionVector[i],1.0)!=0){
+
+            return false;
+        }
+    }
+
+    return true;
+
+}
 int Node::worstFractionary(vector<float> f){
     
-    float worst = 0;
+    int worst = 0;
     for(int i = 1; i<f.size();i++){
 
         if(0.5-fmod(worst,1.0)>0.5-fmod(f[i],1.0)){
@@ -96,43 +107,86 @@ int Node::worstFractionary(vector<float> f){
 
 }
 
-void Node::getBranch(Simplex* s1){
+void Node::restrictions(int n,int pos, int type){
 
-    Node* n1 = new Node();
-    Node* n2 = new Node();
-    left = n1;
-    right = n2;
-    n1->setParent(this);
-    n2->setParent(this);
-    Simplex* s2 = s1->copy();
-    int worstpos = worstFractionary(solutionVector);
-    float up = ceil(solutionVector[worstpos]);
-    float down = floor(solutionVector[worstpos]);
-    s1->initialA = solutionMatrix;
-    s1->insertConstraint(down,worstpos,1);
-    n1->setSolutionMatrix(s1->initialA);
-    n1->setSolutionVector(s1->solve());
-    n1->solve = s1;
-    if(n1->getSolutionVector().empty()){
+    this->simplex.insertConstraint(n,pos,type);
+    return;
+}
 
-        delete n1;
-        left = nullptr;
-    }
-    s2->initialA = solutionMatrix;
-    s2->insertConstraint(up,worstpos,2);
-    n2->setSolutionMatrix(s2->initialA);
-    n2->setSolutionVector(s2->solve());
-    n2->solve = s2;
-    if(n2->getSolutionVector().empty()){
+void Node::getSolve(){
 
-        delete n2;
-        right = nullptr;
-    }
-    delete s1;
-    delete s2;
+    this->solutionVector = this->simplex.solve();
     return;
 
 }
 
+void Node::getBranch(){
 
+    Node* n1 = new Node(getSimplex());
+    Node* n2 = new Node(getSimplex());
+    left = n1;
+    right = n2;
 
+    int worstpos = worstFractionary(solutionVector);
+    cout << "Worst pos: " << worstpos << endl;
+    float down = floor(solutionVector[worstpos]);
+    cout << down << endl;
+    float up = ceil(solutionVector[worstpos]);
+    cout << up << endl;
+
+    n1->restrictions(down,worstpos,1);
+    cout << "N1" << endl;
+    n1->getSimplex().printProblemMatrix();
+    cout << endl;
+    n1->getSolve();
+    if(n1->getSolutionVector().empty()){
+
+        left = nullptr;
+        
+    } else {
+        n1->limits();
+        if(n1->integerSolution()){
+
+            n1->setIntegerSolve(true);
+        }
+    }
+
+    n2->restrictions(up,worstpos,2);
+    cout << "N2" << endl;
+    n2->getSimplex().printProblemMatrix();
+    cout << endl;
+    n2->getSolve();
+    if(n2->getSolutionVector().empty()){
+
+        left = nullptr;
+        
+    } else {
+        n2->limits();
+        if(n2->integerSolution()){
+
+            n2->setIntegerSolve(true);
+        }
+    }
+    
+    return;
+
+}
+
+Node Node::compare(Node* n1,Node* n2){
+
+    if(n1->getZinf() > n2->getZsup()){
+
+        return *n1;
+    } else if(n2->getZinf() > n1->getZsup()){
+
+        return *n2;
+    } else {
+
+        return *n1;
+    }
+}
+
+Node::~Node(){
+    delete left;
+    delete right;
+}

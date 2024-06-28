@@ -39,12 +39,13 @@ public:
     int m2; // ... >=
     int m3; // igualdad
 
+    Simplex();
     Simplex(std::string file_name);
     Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3);
     ~Simplex();
     std::vector<float> solve(); // el retorno es [Z, x1, x2, ..., xn]
     void insertConstraint(float b, int var, int type);
-    Simplex* copy();
+    Simplex copy();
     std::vector<float> getSolution();
     void printProblemMatrix();
     void printSolution();
