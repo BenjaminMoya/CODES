@@ -1,0 +1,73 @@
+Para construir la matriz la primera linea se declara la cantidad de restricciones de tipo 1 2 3, asi luego se
+indica la funcion a maximizar con 0 y luego los valores o constantes que acompañan a cada variable,
+luego se declaran las restricciones indicando primero la constante y luego denuevo el numero que
+acompaña a las variables con un signo negativo, teniendo en cuenta que si queremos que cada variable
+este dentro de un rango de valores por ende deberiamos agregar una restriccion a cada.
+
+Ej p2.txt
+1x+2y+3z=w
+0.1x+0.5y+1.2z<=1.4
+matriz
+4 0 0
+0 1 2 3 funcion a maximizar
+1.4 -0.1 -0.5 -1.2 restriccion
+1 -1 0 0 restricciones sobre variables
+1 0 -1 0
+1 0 0 -1
+
+Para este la primer iteracion da el vector [5,1,1 0,6], y elegimos el peor fraccionario y ramifiamos hacia
+arriba y hacia abajo por lo tanto se restringe a z<=0 y z>=1 añadimos la restriccion por cada rama y
+realizamos el simplex nuevamente. Es mucho mas eficiente elegir las ramas de igualdades ya que se
+eleigen constantes y simplemente se eleimina la variable restando su constante al resultado.
+
+Para z<=0 [3,1,1,0] con zsup = 3 y zinf=3
+4 1 0
+0 1 2 3
+1.4 -0.1 -0.5 -1.2
+1 -1 0 0
+1 0 -1 0
+1 0 0 -1
+1 0 0 -1
+
+Para z>=1 [4.4,1,0.2,1] con zsup=4.4 y zinf=4
+Eliminamos z<=0 ya que el zinf es superior a toda maximizacion
+
+Branch en el segundo, por lo tanto y<=0 y>=1
+5 1 0
+0 1 2 3
+1.4 -0.1 -0.5 -1.2
+1 -1 0 0
+1 0 -1 0
+1 0 0 -1
+0 0 -1 0
+1 0 0 -1
+Para y<=0 [4,1,0,1] con zsup=4 y zinf=4
+
+4 2 0
+0 1 2 3
+1.4 -0.1 -0.5 -1.2
+1 -1 0 0
+1 0 -1 0
+1 0 0 -1
+1 0 0 -1
+
+1 0 -1 0
+Para y>=1 vacio o infactible por lo tanto [4,1,0,1] es la solucion al sistema
+Optimizaciones
+ tomar el nodo que tenga mayor cota superior, sino el de mayor cota inferior
+ podar según cota superiores de los primeros elementos de un conjunto ordenado ya que
+potencialmente no tendran soluciones maximas
+ heuristica greddy con tal de recortar la mayor cantidad de soluciones del poliedro (z<= x+y+z por
+ejemplo)
+ cover cut: maximizar n=x+y+z para saber cuantas variables aguanta el sistema según las
+restricciones de cantidad o de peso
+ej p2.txt
+4 0 0
+0 1 1 1
+1.4 -0.1 -0.5 -1.2
+1 -1 0 0
+1 0 -1 0
+1 0 0 -1
+[2.6,1,1,0.6] , entonces el n max es 2 (eficiente siempre si es n-1) por lo que puedo agregar una
+restriccion tipo x+y+z<=2
+ chvatal-gomory:
