@@ -2,14 +2,15 @@
 
 Simplex::Simplex()
 {
-    this->m = 0;
-    this->n = 0;
+
     this->m1 = 0;
     this->m2 = 0;
     this->m3 = 0;
+    this->m = 0;
+    this->n = 0;
     this->isSolved = false;
-}
 
+}
 /*
     Metodo: Constructor
     Descripcion: este metodo permite iniciar un Simplex, recibiendo

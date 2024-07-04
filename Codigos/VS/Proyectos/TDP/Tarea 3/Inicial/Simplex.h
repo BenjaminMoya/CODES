@@ -39,7 +39,7 @@ public:
     int m2; // ... >=
     int m3; // igualdad
 
-    Simplex ();
+    Simplex();
     Simplex(std::string file_name);
     Simplex(std::vector<std::vector<float>> a, int m1, int m2, int m3);
     ~Simplex();
