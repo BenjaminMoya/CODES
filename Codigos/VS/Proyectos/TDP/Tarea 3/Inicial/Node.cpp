@@ -185,12 +185,3 @@ Node Node::compare(Node* n1,Node* n2){
         return *n1;
     }
 }
-
-<<<<<<< HEAD:Codigos/VS/Proyectos/TDP/Tarea 3/Inicial/Node.cpp
-
-=======
->>>>>>> 39d438d4ae4bdd9cc7ba8786c44d03251e94b7ac:Codigos/VS/Proyectos/TDP/Tarea 3/Node.cpp
-Node::~Node(){
-    delete left;
-    delete right;
-}

@@ -2,20 +2,32 @@
 
 Node::Node(){
     left = nullptr;
-    rigth = nullptr;
+    right = nullptr;
 }
 
 Node::~Node(){
     delete left;
-    delete rigth;
+    delete right;
 }
 
 Node* Node::getLeft(){
     return left;
 }
 
-Node* Node::getRigth(){
-    return rigth;
+Node* Node::getRight(){
+    return right;
+}
+
+float Node::getZinf(){
+    return zinf;
+}
+
+float Node::getZsup(){
+    return zsup;
+}
+
+bool Node::getIntegerSolve(){
+    return integerSolve;
 }
 
 vector<float> Node::getSolutionVector(){
@@ -26,8 +38,8 @@ void Node::setLeft(Node* left){
     this->left = left;
 }
 
-void Node::setRigth(Node* rigth){
-    this->rigth = rigth;
+void Node::setRight(Node* right){
+    this->right = right;
 }
 
 void Node::setSolutionVector(vector<float> newSolutionVector){
@@ -38,12 +50,28 @@ void Node::addRestriction(array<int,3> newRestriction){
     restrictions.insert(newRestriction);
 }
 
+void Node::setZinf(float newZinf){
+    zinf = newZinf;
+}
+
+void Node::setZsup(float newZsup){
+    zsup = newZsup;
+}
+
+void Node::setIntegerSolve(bool newIntegerSolve){
+    integerSolve = newIntegerSolve;
+}
+
+void Node::setRestrictions(set<array<int,3>> newRestrictions){
+    restrictions = newRestrictions;
+}
+
 int Node::worstFractionary(vector<float> f){
     
     int worst = 0;
     for(int i = 1; i<f.size();i++){
 
-        if(0.5-fmod(worst,1.0)>0.5-fmod(f[i],1.0)){
+        if(fabs(0.5-fmod(worst,1.0)) > fabs(0.5-fmod(f[i],1.0))){
 
             worst = i;
         }
@@ -51,6 +79,52 @@ int Node::worstFractionary(vector<float> f){
 
     return worst;
 
+}
+
+void Node::setLimits(){
+
+    zinf = floor(solutionVector[0]);
+    zsup = solutionVector[0];
+}
+
+void Node::solveInteger(){
+
+    for(int i = 1; i<solutionVector.size();i++){
+
+        if(fmod(solutionVector[i],1.0)!=0){
+
+            return;
+        }
+    }
+    integerSolve = true;
+    return;
+}
+
+Node* Node::compareSimple(){
+
+    if(left->getZinf() > right->getZsup()){
+
+        return left;
+    } else if(right->getZinf() > left->getZsup()){
+
+        return right;
+    } else {
+
+        return left;
+    }
+}
+
+Node* Node::compareFractionary(Node* n1,Node* n2){
+
+    int worstPos1 = worstFractionary(n1->getSolutionVector());
+    int worstPos2 = worstFractionary(n2->getSolutionVector());
+    if(fabs(0.5-fmod(n1->getSolutionVector()[worstPos1],1.0)) > fabs(0.5-fmod(n2->getSolutionVector()[worstPos2],1.0))){
+
+        return n1;
+    } else {
+
+        return n2;
+    }
 }
 
 void Node::getBranch(char* filename){
@@ -69,6 +143,8 @@ void Node::getBranch(char* filename){
             array<int,3> a = {down,worstpos,1};
             Node *aux = new Node();
             aux->setSolutionVector(s1->getSolution());
+            aux->solveInteger();
+            aux->setLimits();
             aux->addRestriction(a);
             left = aux;
         }
@@ -79,8 +155,10 @@ void Node::getBranch(char* filename){
             array<int,3> a = {up,worstpos,2};
             Node *aux = new Node();
             aux->setSolutionVector(s2->getSolution());
+            aux->solveInteger();
+            aux->setLimits();
             aux->addRestriction(a);
-            rigth = aux;
+            right = aux;
         }
 
         delete s1;
@@ -102,6 +180,8 @@ void Node::getBranch(char* filename){
             array<int,3> a = {down,worstpos,1};
             Node *aux = new Node();
             aux->setSolutionVector(s1->solve());
+            aux->solveInteger();
+            aux->setLimits();
             aux->addRestriction(a);
             left = aux;
         }
@@ -112,8 +192,10 @@ void Node::getBranch(char* filename){
             array<int,3> a = {up,worstpos,2};
             Node *aux = new Node();
             aux->setSolutionVector(s2->solve());
+            aux->solveInteger();
+            aux->setLimits();
             aux->addRestriction(a);
-            rigth = aux;
+            right = aux;
         }
 
         delete s1;
@@ -121,5 +203,4 @@ void Node::getBranch(char* filename){
         return;
     }
 
-    
 }
