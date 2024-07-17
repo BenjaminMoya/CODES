@@ -37,6 +37,7 @@ class Node{
         void solveInteger();
         Node* compareSimple();
         Node* compareFractionary(Node* n1,Node* n2);
+        Node* compareInteger(Node* n1,Node* n2);
         void getBranch(char* filename);
         
 };

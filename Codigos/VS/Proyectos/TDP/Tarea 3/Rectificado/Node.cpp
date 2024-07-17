@@ -127,6 +127,27 @@ Node* Node::compareFractionary(Node* n1,Node* n2){
     }
 }
 
+Node* Node::compareInteger(Node* n1,Node* n2){
+
+    if(n1->getIntegerSolve() && n2->getIntegerSolve()){
+
+        if(n1->getZsup() > n2->getZsup()){
+
+            return n1;
+        } else {
+
+            return n2;
+        }
+    } else if(!n1->getIntegerSolve() && n2->getIntegerSolve()) {
+
+        return n2;
+    } else if(n1->getIntegerSolve() && !n2->getIntegerSolve()){
+
+        return n1;
+    }
+
+}
+
 void Node::getBranch(char* filename){
 
     int worstpos = worstFractionary(solutionVector);
@@ -169,7 +190,7 @@ void Node::getBranch(char* filename){
     if(!(restrictions.empty())){
         
         for(auto x: restrictions){
-
+            
             s1->insertConstraint(get<0>(x),get<1>(x),get<2>(x));
             s2->insertConstraint(get<0>(x),get<1>(x),get<2>(x));
         }
@@ -179,7 +200,7 @@ void Node::getBranch(char* filename){
 
             array<int,3> a = {down,worstpos,1};
             Node *aux = new Node();
-            aux->setSolutionVector(s1->solve());
+            aux->setSolutionVector(s1->getSolution());
             aux->solveInteger();
             aux->setLimits();
             aux->addRestriction(a);
@@ -191,7 +212,7 @@ void Node::getBranch(char* filename){
 
             array<int,3> a = {up,worstpos,2};
             Node *aux = new Node();
-            aux->setSolutionVector(s2->solve());
+            aux->setSolutionVector(s2->getSolution());
             aux->solveInteger();
             aux->setLimits();
             aux->addRestriction(a);

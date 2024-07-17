@@ -1,13 +1,13 @@
-#include "Node.h"
+#include "Tree.h"
 
 int main(){
 
-    char filename[100];
+    char filename[100]; 
     bool cond = true;
     int option;
+    cout << "Solucionador 0-1 Knapsack" << endl;
     while(cond){
         cout << endl;
-        cout << "Solucionador 0-1 Knapsack" << endl;
         cout << "1)Solucionar un archivo" << endl;
         cout << "2)Salir" << endl;
         cin >> option;
@@ -19,8 +19,10 @@ int main(){
             Node* n = new Node();
             n->setSolutionVector(s->solve());
             n->getBranch(filename);
-            for(auto x: n->getRight()->getSolutionVector()){
-                cout<< x <<" ";
+            Tree* t = new Tree(n);
+            t->getBound(filename);
+            for(auto x: t->getBestInteger()->getSolutionVector()){
+                cout << x << " ";
             }
         }
 
@@ -30,5 +32,6 @@ int main(){
             cond = false;
         }
     }
+    
     return 0;
 }

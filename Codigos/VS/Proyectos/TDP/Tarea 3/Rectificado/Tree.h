@@ -10,7 +10,7 @@ class Tree{
 
     public:
 
-        Tree(Node *n);
+        Tree(Node* n);
         ~Tree();
         set<Node*> getToVisit();
         Node* getBestNode();

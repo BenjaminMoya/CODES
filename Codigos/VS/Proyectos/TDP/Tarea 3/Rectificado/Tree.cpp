@@ -1,6 +1,6 @@
 #include "Tree.h"
 
-Tree::Tree(Node *n){
+Tree::Tree(Node* n){
     bestNode = nullptr;
     bestInteger = nullptr;
     toVisit.insert(n);
@@ -36,33 +36,28 @@ void Tree::setBestInteger(Node* newBestInteger){
 }
 
 void Tree::getBound(char* filename){
-
+    
     while(!toVisit.empty()){
-
+        
         set<Node*>::iterator it = toVisit.begin();
         Node* aux = *(it);
         aux->getBranch(filename);
         if(aux->getLeft() != nullptr && aux->getRight() != nullptr){
             
             Node* temp = aux->compareSimple();
+            Node* temp2 = aux->compareInteger(aux->getLeft(),aux->getRight());
             if(bestNode == nullptr){
 
                 bestNode = temp;
-                if(temp->getIntegerSolve()){
-
-                    bestInteger = temp;
-                }
+                bestInteger = temp2;
                 toVisit.insert(temp);
 
             } else {
                 
-                if(temp->getZsup() > bestNode->getZinf()){
-
+                if(temp->getZsup() >= bestNode->getZinf()){ //Borrando los comparativos funciona
+                    
                     bestNode = aux->compareFractionary(temp,bestNode);
-                    if(temp->getIntegerSolve() && temp->getZsup() > bestInteger->getZsup()){
-
-                        bestInteger = temp;
-                    }
+                    bestInteger = aux->compareInteger(temp2,bestInteger);
                     toVisit.insert(temp);
                 }
                 
@@ -83,13 +78,10 @@ void Tree::getBound(char* filename){
 
             } else {
                 
-                if(temp->getZsup() > bestNode->getZinf()){
+                if(temp->getZsup() >= bestNode->getZinf()){
 
                     bestNode = aux->compareFractionary(temp,bestNode);
-                    if(temp->getIntegerSolve() && temp->getZsup() > bestInteger->getZsup()){
-
-                        bestInteger = temp;
-                    }
+                    bestInteger = aux->compareInteger(temp,bestInteger);
                     toVisit.insert(temp);
                 }
                 
@@ -110,13 +102,10 @@ void Tree::getBound(char* filename){
 
             } else {
                 
-                if(temp->getZsup() > bestNode->getZinf()){
+                if(temp->getZsup() >= bestNode->getZinf()){
 
                     bestNode = aux->compareFractionary(temp,bestNode);
-                    if(temp->getIntegerSolve() && temp->getZsup() > bestInteger->getZsup()){
-
-                        bestInteger = temp;
-                    }
+                    bestInteger = aux->compareInteger(temp,bestInteger);
                     toVisit.insert(temp);
                 }
                 
