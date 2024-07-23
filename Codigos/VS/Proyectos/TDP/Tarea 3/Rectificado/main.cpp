@@ -21,7 +21,7 @@ int main(){
             n->getBranch(filename);
             Tree* t = new Tree(n);
             t->getBound(filename);
-            for(auto x: t->getBestInteger()->getSolutionVector()){
+            for(auto x: t->getBestNode()->getSolutionVector()){
                 cout << x << " ";
             }
         }

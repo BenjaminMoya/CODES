@@ -38,6 +38,7 @@ class Node{
         Node* compareSimple();
         Node* compareFractionary(Node* n1,Node* n2);
         Node* compareInteger(Node* n1,Node* n2);
+        bool eq(Node* n);
         void getBranch(char* filename);
         
 };
