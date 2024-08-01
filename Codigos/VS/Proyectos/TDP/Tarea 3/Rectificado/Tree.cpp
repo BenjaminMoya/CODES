@@ -45,42 +45,20 @@ void Tree::setBestInteger(Node* newBestInteger){
 
 bool Tree::checkVisit(Node* n){
 
-    //Verifica si la solucion ya se reviso en la lista de visitados
-    if(visited.empty()){
+    if (visited.empty()) {
 
         return false;
     }
 
-    auto it1 = visited.begin();
-    auto it2 = visited.rbegin();
+    auto it = visited.find(n);
 
-    if((*it1)->eq(*it2)) {
+    if (it == visited.end()) {
 
-        if((*it1)->eq(n)){
+        return false;
+    } else {
 
-            return true;
-        } else {
-
-            return false;
-        }
+        return true;
     }
-
-    while(it1 != visited.end() && it2 != visited.rend()){
-
-        if((*it1)->eq(n)){
-
-            return true;
-        }
-
-        if((*it2)->eq(n)){
-
-            return true;
-        }
-        it1++;
-        it2++;
-    }
-
-    return false;
 }
 
 /*
@@ -88,9 +66,10 @@ bool Tree::checkVisit(Node* n){
     4.4 1 0.2 1 3 1 1 0 4 1 0 1 4 1 0 1 5 1 1 0.666667 5 1 1 0.666667 4.4 1 0.2 1 3 1 1 0 5 1 1 0.666667. Hay que quitar las
     ultimas rpeticiones, verificando las condicioonales.
 
-    Ahora se cae, parece ser por mala gestion de los iteradores no tanto de memoria,}
+    Ahora se cae, parece ser por mala gestion de los iteradores no tanto de memoria, 
     revisar con valgrind.
 */
+
 void Tree::getBound(char* filename){ 
     
     while(!toVisit.empty()){
@@ -102,21 +81,11 @@ void Tree::getBound(char* filename){
 
             visited.insert(aux);
             aux->getBranch(filename);
+
             if(aux->getLeft() != nullptr && aux->getRight() != nullptr){
+
                 Node* temp = aux->compareSimple();
-                if(temp == nullptr){
-
-                    temp = aux->compareFractionary(aux->getLeft(),aux->getRight());
-                    if(temp == nullptr){
-
-                        temp = aux->getLeft();
-                    }
-                }
                 Node* temp2 = aux->compareInteger(aux->getLeft(),aux->getRight());
-                if(temp2 == nullptr){
-
-                    temp2 = aux->getLeft();
-                }
 
                 if(bestNode == nullptr){
 
@@ -137,6 +106,7 @@ void Tree::getBound(char* filename){
             }
 
             if(aux->getLeft() != nullptr && aux->getRight() == nullptr){
+
                 Node* temp = aux->getLeft();
                 if(bestNode == nullptr){
 
@@ -160,6 +130,7 @@ void Tree::getBound(char* filename){
             }
 
             if(aux->getLeft() == nullptr && aux->getRight() != nullptr){
+                
                 Node* temp = aux->getRight();
                 if(bestNode == nullptr){
 
@@ -182,6 +153,7 @@ void Tree::getBound(char* filename){
                 }
             }
         }
+        
         toVisit.erase(it);
     }
 

@@ -114,7 +114,8 @@ Node* Node::compareSimple(){
 
     } else {
 
-        return nullptr;
+        return compareFractionary(right,left);
+    
     }
 
 }
@@ -126,12 +127,14 @@ Node* Node::compareFractionary(Node* n1, Node* n2){ //Retorna el menos fracciona
     if(fabs(0.5-fmod(n1->getSolutionVector()[worstPos1],1.0)) > fabs(0.5-fmod(n2->getSolutionVector()[worstPos2],1.0))){
 
         return n1;
-    } else if(fabs(0.5-fmod(n1->getSolutionVector()[worstPos1],1.0)) < fabs(0.5-fmod(n2->getSolutionVector()[worstPos2],1.0))) {
-
-        return n2;
     } else {
 
-        return nullptr;
+        return n2;
+    }
+
+    if(n1->getZsup() != n2->getZsup()){
+
+        return n1;
     }
 }
 
@@ -147,7 +150,7 @@ Node* Node::compareInteger(Node* n1,Node* n2){
             return n2;
         } else {
 
-            return nullptr;
+            return n1;
         }
 
     } else if(!n1->getIntegerSolve() && n2->getIntegerSolve()) {
@@ -162,17 +165,14 @@ Node* Node::compareInteger(Node* n1,Node* n2){
 
 bool Node::eq(Node* n){
 
-    if (n->getSolutionVector().size() != solutionVector.size()) {
+    if(n->getSolutionVector() == solutionVector){
+
+        return true;
+    } else {
+
         return false;
     }
-    for (int i = 0; i < solutionVector.size(); ++i) {
-        if (n->getSolutionVector()[i] != solutionVector[i]) {
-            return false;
-        }
-    }
-    return true;
 }
-
 void Node::getBranch(char* filename){
 
     int worstpos = worstFractionary(solutionVector);
