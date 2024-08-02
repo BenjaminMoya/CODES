@@ -191,6 +191,7 @@ Node* Node::compareInteger(Node* n1,Node* n2){
         }
     }
 
+    return nullptr;
 }
 
 bool Node::eq(Node* n){

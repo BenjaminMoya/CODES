@@ -24,9 +24,14 @@ int main(){
             Tree* t = new Tree(n);
             t->getBound(filename);
             cout << endl;
-            cout << "La solucion al sistema es:"<< endl;
-            for(auto x: t->getBestInteger()->getSolutionVector()){
-                cout << x << " ";
+            if(t->getBestInteger() != nullptr){
+                cout << "La solucion al sistema es:"<< endl;
+                for(auto x: t->getBestInteger()->getSolutionVector()){
+                    cout << x << " ";
+                }
+            } else {
+
+                cout << "No se encontro solucion entera" << endl;
             }
             cout << endl;
         }
