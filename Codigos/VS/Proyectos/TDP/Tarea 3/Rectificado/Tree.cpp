@@ -50,24 +50,22 @@ bool Tree::checkVisit(Node* n){
         return false;
     }
 
-    auto it = visited.find(n);
+    for (auto it = visited.begin(); it != visited.end(); ++it) {
 
-    if (it == visited.end()) {
+        Node* currentNode = *it;
+        if(currentNode->getSolutionVector() == n->getSolutionVector()){
 
-        return false;
-    } else {
-
-        return true;
+            return true;
+        }
     }
+
+    return false;
 }
 
 /*
-    Ver porque agrega soluciones que no deberia agregar
-    4.4 1 0.2 1 3 1 1 0 4 1 0 1 4 1 0 1 5 1 1 0.666667 5 1 1 0.666667 4.4 1 0.2 1 3 1 1 0 5 1 1 0.666667. Hay que quitar las
-    ultimas rpeticiones, verificando las condicioonales.
-
-    Ahora se cae, parece ser por mala gestion de los iteradores no tanto de memoria, 
-    revisar con valgrind.
+    Todo arreglado. Queda optimizar implemenetando el cover cut el cual se vio en clases
+    donde se hace una aproximacion con las mismas restricciones iniciales de las distintas variables sin peso
+    por lo que tendremos una restriccion extra donde las variables no podran pasar ciertas normativas recortando la busqueda
 */
 
 void Tree::getBound(char* filename){ 

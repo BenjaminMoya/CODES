@@ -12,6 +12,7 @@ int main(){
         cout << "1)Solucionar un archivo" << endl;
         cout << "2)Salir" << endl;
         cin >> option;
+        cout << endl;
         if(option == 1){
 
             cout << "Ingrese el nombre del archivo con el problema: ";
@@ -22,9 +23,12 @@ int main(){
             n->getBranch(filename);
             Tree* t = new Tree(n);
             t->getBound(filename);
-            for(auto x: t->getBestNode()->getSolutionVector()){
+            cout << endl;
+            cout << "La solucion al sistema es:"<< endl;
+            for(auto x: t->getBestInteger()->getSolutionVector()){
                 cout << x << " ";
             }
+            cout << endl;
         }
 
         if(option == 2){

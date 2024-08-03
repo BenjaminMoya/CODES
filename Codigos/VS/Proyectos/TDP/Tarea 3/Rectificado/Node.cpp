@@ -102,6 +102,7 @@ void Node::solveInteger(){
 
 Node* Node::compareSimple(){
 
+
     if(right->getZsup() != left->getZsup()){
 
         if(right->getZsup() > left->getZsup()){
@@ -111,54 +112,83 @@ Node* Node::compareSimple(){
 
             return left;
         }   
-
     } else {
 
         return compareFractionary(right,left);
-    
     }
 
 }
 
 Node* Node::compareFractionary(Node* n1, Node* n2){ //Retorna el menos fraccionario
 
-    int worstPos1 = worstFractionary(n1->getSolutionVector());
-    int worstPos2 = worstFractionary(n2->getSolutionVector());
-    if(fabs(0.5-fmod(n1->getSolutionVector()[worstPos1],1.0)) > fabs(0.5-fmod(n2->getSolutionVector()[worstPos2],1.0))){
+    if(n1 == nullptr && n2 == nullptr){
+
+        return nullptr;
+    } else if (n1 != nullptr && n2== nullptr) {
 
         return n1;
-    } else {
+    } else if (n1 == nullptr && n2 != nullptr) {
 
         return n2;
-    }
+    } else {
 
-    if(n1->getZsup() != n2->getZsup()){
+        int worstPos1 = worstFractionary(n1->getSolutionVector());
+        int worstPos2 = worstFractionary(n2->getSolutionVector());
+        if(fabs(0.5-fmod(n1->getSolutionVector()[worstPos1],1.0)) > fabs(0.5-fmod(n2->getSolutionVector()[worstPos2],1.0))){
 
-        return n1;
+            return n1;
+        } else if(fabs(0.5-fmod(n1->getSolutionVector()[worstPos1],1.0)) < fabs(0.5-fmod(n2->getSolutionVector()[worstPos2],1.0))){
+
+            return n2;
+        } else {
+
+            if(n1->getZsup() > n2->getZsup()){
+
+                return n1;
+            } else if (n1->getZsup() < n2->getZsup()){
+
+                return n2;
+            } else {
+
+                return n1;
+            }
+
+        }
     }
 }
 
 Node* Node::compareInteger(Node* n1,Node* n2){ 
 
-    if(n1->getIntegerSolve() && n2->getIntegerSolve()){
+    if(n1 == nullptr && n2 == nullptr){
 
-        if(n1->getZsup() > n2->getZsup()){
+        return nullptr;
+    } else if (n1 != nullptr && n2== nullptr) {
 
-            return n1;
-        } else if(n1->getZsup() < n2->getZsup()){
+        return n1;
+    } else if (n1 == nullptr && n2 != nullptr) {
+
+        return n2;
+    } else {
+        if(n1->getIntegerSolve() && n2->getIntegerSolve()){
+
+            if(n1->getZsup() > n2->getZsup()){
+
+                return n1;
+            } else if(n1->getZsup() < n2->getZsup()){
+
+                return n2;
+            } else {
+
+                return n1;
+            }
+
+        } else if(!n1->getIntegerSolve() && n2->getIntegerSolve()) {
 
             return n2;
-        } else {
+        } else if(n1->getIntegerSolve() && !n2->getIntegerSolve()){
 
             return n1;
         }
-
-    } else if(!n1->getIntegerSolve() && n2->getIntegerSolve()) {
-
-        return n2;
-    } else if(n1->getIntegerSolve() && !n2->getIntegerSolve()){
-
-        return n1;
     }
 
 }
