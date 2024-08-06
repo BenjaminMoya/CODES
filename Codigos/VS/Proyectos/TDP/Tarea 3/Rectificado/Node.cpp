@@ -100,25 +100,6 @@ void Node::solveInteger(){
     return;
 }
 
-Node* Node::compareSimple(){
-
-
-    if(right->getZsup() != left->getZsup()){
-
-        if(right->getZsup() > left->getZsup()){
-
-            return right;
-        } else {
-
-            return left;
-        }   
-    } else {
-
-        return compareFractionary(right,left);
-    }
-
-}
-
 Node* Node::compareFractionary(Node* n1, Node* n2){ //Retorna el menos fraccionario
 
     if(n1 == nullptr && n2 == nullptr){
@@ -130,6 +111,15 @@ Node* Node::compareFractionary(Node* n1, Node* n2){ //Retorna el menos fracciona
     } else if (n1 == nullptr && n2 != nullptr) {
 
         return n2;
+    } else if (n1->getIntegerSolve() && !n2->getIntegerSolve()){
+        
+        return n2;
+    } else if (!n1->getIntegerSolve() && n2->getIntegerSolve()){
+
+        return n1;
+    } else if (n1->getIntegerSolve() && n2->getIntegerSolve()){
+
+        return compareInteger(n1,n2);
     } else {
 
         int worstPos1 = worstFractionary(n1->getSolutionVector());
@@ -155,6 +145,8 @@ Node* Node::compareFractionary(Node* n1, Node* n2){ //Retorna el menos fracciona
 
         }
     }
+
+    return nullptr;
 }
 
 Node* Node::compareInteger(Node* n1,Node* n2){ 
@@ -162,14 +154,21 @@ Node* Node::compareInteger(Node* n1,Node* n2){
     if(n1 == nullptr && n2 == nullptr){
 
         return nullptr;
-    } else if (n1 != nullptr && n2== nullptr) {
+    } else if (n1 != nullptr && n2 == nullptr && n1->getIntegerSolve()) {
 
         return n1;
-    } else if (n1 == nullptr && n2 != nullptr) {
+    } else if (n1 == nullptr && n2 != nullptr && n2->getIntegerSolve()) {
 
         return n2;
     } else {
-        if(n1->getIntegerSolve() && n2->getIntegerSolve()){
+
+        if(!n1->getIntegerSolve() && n2->getIntegerSolve()) {
+
+            return n2;
+        } else if(n1->getIntegerSolve() && !n2->getIntegerSolve()){
+
+            return n1;
+        } else {
 
             if(n1->getZsup() > n2->getZsup()){
 
@@ -181,13 +180,6 @@ Node* Node::compareInteger(Node* n1,Node* n2){
 
                 return n1;
             }
-
-        } else if(!n1->getIntegerSolve() && n2->getIntegerSolve()) {
-
-            return n2;
-        } else if(n1->getIntegerSolve() && !n2->getIntegerSolve()){
-
-            return n1;
         }
     }
 

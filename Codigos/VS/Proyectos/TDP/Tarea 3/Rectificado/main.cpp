@@ -2,7 +2,6 @@
 
 int main(){
 
-    
     char filename[100]; 
     bool cond = true;
     int option;
@@ -32,6 +31,7 @@ int main(){
             } else {
 
                 cout << "No se encontro solucion entera" << endl;
+
             }
             cout << endl;
         }

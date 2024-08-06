@@ -7,15 +7,15 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            component: () => import('../views/loginView.vue'),
+            component: () => import('../views/userAnonSolititation.vue'),
             alias: '/inicio',
         },
         {
-            path: '/user',
-            name: 'user',
-            component: () => import('../views/userSolititation.vue'),
+            path: '/login',
+            name: 'login',
+            component: () => import('../views/loginView.vue'),
             alias: '/inicio',
-        }
+        },
     ],
 });
 

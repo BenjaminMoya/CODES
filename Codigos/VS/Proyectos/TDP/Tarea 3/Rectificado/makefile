@@ -13,6 +13,3 @@ Tree.o: Tree.cpp Tree.h
 
 main: main.cpp Simplex.o Node.o Tree.o
 	g++ $(FLAGS) main.cpp  Simplex.o Node.o Tree.o -o main
-
-clean:
-	rm -f *.o main
