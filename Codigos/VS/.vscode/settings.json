@@ -67,7 +67,10 @@
         "thread": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "types.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

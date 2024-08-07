@@ -15,4 +15,3 @@ clean:
 #Posibles comandos por consola luego de compilar
 #./lab1 -N ejemplo -C directorio -R tabla
 #./lab1 -N ejemplo -f 1 -p 20 -C directorio -R tabla
-
