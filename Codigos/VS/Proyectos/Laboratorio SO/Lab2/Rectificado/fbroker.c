@@ -172,3 +172,93 @@ char** file_names(const char *prefix) {
     file_names[count] = NULL; // Marcar el final del arreglo de nombres de archivo
     return file_names;
 }
+
+BMPImage** divide_image(BMPImage *image, int workers){
+    int columns_per_worker = image->width / workers;
+    int remainder_columns = image->width % workers;
+    BMPImage** sub_images;
+
+    for (int i = 0; i < workers; i++) {
+        sub_images[i] = (BMPImage*)malloc(sizeof(BMPImage));
+        sub_images[i]->width = columns_per_worker + (i < remainder_columns ? 1 : 0);
+        sub_images[i]->height = image->height;
+        sub_images[i]->data = (RGBPixel*)malloc(sub_images[i]->width * image->height * sizeof(RGBPixel));
+
+        int offset = i * columns_per_worker + (i < remainder_columns ? i : remainder_columns);
+        for (int y = 0; y < image->height; y++) {
+            memcpy(&sub_images[i]->data[y * sub_images[i]->width], 
+                   &image->data[y * image->width + offset], 
+                   sub_images[i]->width * sizeof(RGBPixel));
+        }
+    }
+}
+
+BMPImage* reassemble_image(BMPImage **sub_images, int num_workers) {
+    int total_width = 0;
+    int height = sub_images[0]->height;
+    for (int i = 0; i < num_workers; i++) {
+        total_width += sub_images[i]->width;
+    }
+
+    BMPImage *full_image = (BMPImage*)malloc(sizeof(BMPImage));
+    full_image->width = total_width;
+    full_image->height = height;
+    full_image->data = (RGBPixel*)malloc(total_width * height * sizeof(RGBPixel));
+
+    int offset = 0;
+    for (int i = 0; i < num_workers; i++) {
+        for (int y = 0; y < height; y++) {
+            memcpy(&full_image->data[y * total_width + offset], 
+                   &sub_images[i]->data[y * sub_images[i]->width], 
+                   sub_images[i]->width * sizeof(RGBPixel));
+        }
+        offset += sub_images[i]->width;
+    }
+
+    return full_image;
+}
+
+BMPImage** send_and_receive(BMPImage** imageSplit, int workers, int filter, float saturation, float thresholdbina){
+
+    close(pipe_parent_to_child[1]); // No se usa el descriptor de escritura hacia el padre
+    close(pipe_child_to_parent[0]); // No se usa el descriptor de lectura hacia el padre
+    for (int i = 0; i < workers; i++) {
+        // Crear pipes
+        if (pipe(pipe_parent_to_child) == -1 || pipe(pipe_child_to_parent) == -1) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
+        
+        pid_t pid = fork();
+        if (pid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+        
+        if (pid == 0) { // Proceso hijo
+
+            // Redirigir stdin y stdout
+            dup2(pipe_parent_to_child[0], STDIN_FILENO);  // Redirige stdin del hijo al pipe de entrada
+            dup2(pipe_child_to_parent[1], STDOUT_FILENO); // Redirige stdout del hijo al pipe de salida
+
+            // Ejecutar el programa deseado
+            char flag1="-f ",flag2="-p ",flag3="-u ";
+            char arg1[2],arg2[3],arg3[4],arg4[4];
+            strcat(flag1,prefix);
+            sprintf(arg1,"%d",filters);
+            strcat(flag2,arg1);
+            sprintf(arg2,"%d",workers);
+            strcat(flag3,arg2);
+            sprintf(arg3,"%d",saturation);
+            strcat(flag4,arg3);
+            sprintf(arg4,"%d",thresholdbina);
+            strcat(flag5,arg4);
+            char* argv[] = {"./broker",flag1,flag2,flag3,flag4,flag5,NULL};
+            execv(argv[0],argv);
+            perror("execl");
+            exit(EXIT_FAILURE);
+        } else { // Proceso padre tiene que esperar a que termine el hijo para buscar en el pipe lo que hizo el hijo
+        
+        }
+    }
+}

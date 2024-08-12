@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <semaphore.h>
 #include <bits/getopt_core.h>
 
 #pragma pack(push, 1)
@@ -45,6 +46,11 @@ typedef struct {
     int type; //  Clasificacion que se detallara en el archivo .csv donde 1=nearly black y 0=no nearly black
     RGBPixel *data; // Puntero a los píxeles de la imagen
 } BMPImage;
+
+sem_t mutexMain;
+sem_t mutexWorker;
+int pipe_parent_to_child[2]; 
+int pipe_child_to_parent[2];
 
 BMPImage* read_bmp(const char* filename); 
 void free_bmp(BMPImage* image);

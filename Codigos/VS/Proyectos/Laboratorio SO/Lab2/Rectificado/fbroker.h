@@ -9,3 +9,6 @@ void move_file(const char *filename, const char *foldername);
 void new_csv(const char *filename);
 void write_csv(BMPImage *image,const char *csvname);
 char** file_names(const char *prefix);
+BMPImage** split_image(BMPImage *image, int workers);
+BMPImage* reassemble_image(BMPImage **sub_images, int num_workers);
+BMPImage** send_and_receive(BMPImage** imageSplit, int workers, int filter, float saturation, float thresholdbina);
