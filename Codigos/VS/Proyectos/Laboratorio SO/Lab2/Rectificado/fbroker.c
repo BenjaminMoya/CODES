@@ -191,6 +191,8 @@ BMPImage** divide_image(BMPImage *image, int workers){
                    sub_images[i]->width * sizeof(RGBPixel));
         }
     }
+
+    return sub_images;
 }
 
 BMPImage* reassemble_image(BMPImage **sub_images, int num_workers) {
@@ -220,8 +222,23 @@ BMPImage* reassemble_image(BMPImage **sub_images, int num_workers) {
 
 BMPImage** send_and_receive(BMPImage** imageSplit, int workers, int filter, float saturation, float thresholdbina){
 
+    sem_t *mutex_broker = sem_open("/mutex_broker", O_CREAT | O_EXCL, 0644, 0);
+    if (mutex_broker == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+    sem_t *mutex_worker = sem_open("/mutex_worker", O_CREAT | O_EXCL, 0644, 0);
+    if (mutex_worker == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
+    int pipe_parent_to_child[2];
+    int pipe_child_to_parent[2];
+
     close(pipe_parent_to_child[1]); // No se usa el descriptor de escritura hacia el padre
     close(pipe_child_to_parent[0]); // No se usa el descriptor de lectura hacia el padre
+
     for (int i = 0; i < workers; i++) {
         // Crear pipes
         if (pipe(pipe_parent_to_child) == -1 || pipe(pipe_child_to_parent) == -1) {
@@ -237,28 +254,63 @@ BMPImage** send_and_receive(BMPImage** imageSplit, int workers, int filter, floa
         
         if (pid == 0) { // Proceso hijo
 
+            close(pipe_parent_to_child[1]); // No se usa el descriptor de escritura hacia el padre
+            close(pipe_child_to_parent[0]); // No se usa el descriptor de lectura desde el padre
             // Redirigir stdin y stdout
             dup2(pipe_parent_to_child[0], STDIN_FILENO);  // Redirige stdin del hijo al pipe de entrada
             dup2(pipe_child_to_parent[1], STDOUT_FILENO); // Redirige stdout del hijo al pipe de salida
 
-            // Ejecutar el programa deseado
-            char flag1="-f ",flag2="-p ",flag3="-u ";
-            char arg1[2],arg2[3],arg3[4],arg4[4];
-            strcat(flag1,prefix);
-            sprintf(arg1,"%d",filters);
-            strcat(flag2,arg1);
-            sprintf(arg2,"%d",workers);
-            strcat(flag3,arg2);
-            sprintf(arg3,"%d",saturation);
-            strcat(flag4,arg3);
-            sprintf(arg4,"%d",thresholdbina);
-            strcat(flag5,arg4);
-            char* argv[] = {"./broker",flag1,flag2,flag3,flag4,flag5,NULL};
+            //Ejecutar el programa deseado
+            char flag1[]="-f ",flag2[]="-p ",flag3[]="-u ";
+            char float_str1[32],float_str2[32],float_str3[32];
+            sprintf(float_str1,"%d",filter);
+            sprintf(float_str2,"%f",saturation);
+            sprintf(float_str3,"%f",thresholdbina);
+            strcat(flag1,float_str1);
+            strcat(flag2,float_str2);
+            strcat(flag3,float_str3);
+            char* argv[] = {"./worker",flag1,flag2,flag3,NULL};
             execv(argv[0],argv);
-            perror("execl");
-            exit(EXIT_FAILURE);
+            exit(0);
+
         } else { // Proceso padre tiene que esperar a que termine el hijo para buscar en el pipe lo que hizo el hijo
-        
+
+            close(pipe_parent_to_child[0]); // No se usa el descriptor de lectura desde el hijo
+            close(pipe_child_to_parent[1]); // No se usa el descriptor de escritura hacia el hijo
+
+            // Enviar datos al hijo
+            ssize_t bytes_written = write(pipe_child_to_parent[1], imageSplit[i], sizeof(imageSplit[i]));
+            if (bytes_written != sizeof(imageSplit[i])) {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+            bytes_written = write(pipe_child_to_parent[1], imageSplit[i]->data, imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel));
+            if (bytes_written != imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel)) {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+            sem_post(mutex_worker); //Le avisa al worker que ya puede empezar a trabajar
+            sem_wait(mutex_broker); //Espera a que el worker termine su ejecucion
+
+            //Leer y guardar la imagen procesada
+            imageSplit[i]->data = malloc(imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel));
+            if (imageSplit[i]->data == NULL) {
+                perror("malloc");
+                exit(EXIT_FAILURE);
+            }
+            ssize_t bytes_read = read(pipe_parent_to_child[0], imageSplit[i], sizeof(imageSplit[i]));
+            if (bytes_read != sizeof(imageSplit[i])) {
+                perror("read");
+                exit(EXIT_FAILURE);
+            }
+            bytes_read = read(pipe_parent_to_child[0], imageSplit[i]->data, imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel));
+            if (bytes_read != imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel)) {
+                perror("read");
+                exit(EXIT_FAILURE);
+            }
+
+            close(pipe_child_to_parent[1]);
+            close(pipe_parent_to_child[0]);
         }
     }
 }

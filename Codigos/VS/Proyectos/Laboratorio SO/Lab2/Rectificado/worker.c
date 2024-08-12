@@ -1,6 +1,19 @@
 #include "fworker.h"
 
 int main(int argc, char *argv[]) {
+
+    sem_t *mutex_broker = sem_open("/mutex_broker", 0); // No se crea, solo se abre
+    if (mutex_broker == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
+    sem_t *mutex_worker = sem_open("/mutex_worker", 0); // No se crea, solo se abre
+    if (mutex_worker== SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+    
     int option;
     int filter = 0;
     float saturation = 1.0, thresholdbina = 0.5;
@@ -22,28 +35,57 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    sem_wait(&mutexWorker);//Esperar a que todos los workers esten listos;
-    //Espera a que el broker le envie el trozo de imagen
+    sem_wait(mutex_worker); 
 
     //Recibe el trozo de imagen desde el broker
 
-    //Procesamiento
+    BMPImage* image_read;
+    ssize_t bytes_read = read(STDIN_FILENO, image_read, sizeof(image_read));
+    if (bytes_read != sizeof(image_read)) {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+
+        // Leer los datos de la imagen
+    image_read->data = malloc(image_read->width * image_read->height * sizeof(RGBPixel));
+    if (image_read->data == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    bytes_read = read(STDIN_FILENO, image_read->data, image_read->width * image_read->height * sizeof(RGBPixel));
+    if (bytes_read != image_read->width * image_read->height * sizeof(RGBPixel)) {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
 
     if(filter == 1){
 
-        //saturate_bmp(image, saturation);
+        image_read = saturate_bmp(image_read, saturation);
     } 
 
     if(filter == 2){
 
-        //grayscale(image);
+        image_read = grayscale(image_read);
     }
 
     if(filter == 3){
 
-        //binarization(image, thresholdbina);
+        image_read = binarization(image_read, thresholdbina);
+    }
+    
+    ssize_t bytes_written = write(STDOUT_FILENO, image_read, sizeof(image_read));
+    if (bytes_written != sizeof(image_read)) {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
+    bytes_written = write(STDOUT_FILENO, image_read->data, image_read->width * image_read->height * sizeof(RGBPixel));
+    if (bytes_written != image_read->width * image_read->height * sizeof(RGBPixel)) {
+        perror("write");
+        exit(EXIT_FAILURE);
     }
 
-    //Envia el trozo de imagen al broker
+    free(image_read->data);
+    exit(EXIT_SUCCESS);
+    sem_post(mutex_broker);
     return 1;
 }

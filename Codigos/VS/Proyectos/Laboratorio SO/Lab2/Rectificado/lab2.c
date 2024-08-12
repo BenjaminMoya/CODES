@@ -106,9 +106,13 @@ int main(int argc, char *argv[]) {
         printf("El umbral de clasificacion debe estar entre 0 y 1");
         return 1;
     }
-
-    sem_init(&mutexMain, 0, 1); // Inicializar el semáforo mutexMain
-    sem_init(&mutexWorker, 0, 0); // Inicializar el semáforo mutexWorker
+    
+    sem_t *mutex_main = sem_open("/mutex_main", O_CREAT | O_EXCL, 0644, 0);
+    if (mutex_main == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+    
     csvname= strcat(csvname,".csv"); // Agregar la extensión .csv al nombre del archivo csv
     new_folder(foldername); // Crear el directorio donde se guardarán las imágenes
     new_csv(csvname); // Crear el archivo csv
@@ -116,24 +120,26 @@ int main(int argc, char *argv[]) {
     int pid = fork();
     if(pid == 0){
 
-        char flag1="-N ",flag2="-f ",flag3="-p ",flag4="-u ",flag5="-W";
-        char arg1[2],arg2[3],arg3[4],arg4[4];
+        char flag1[]="-N ",flag2[]="-f ",flag3[]="-p ",flag4[]="-u ",flag5[]="-v ",flag6[]="-W";
+        char float_str1[32],float_str2[32],float_str3[32],float_str4[32],float_str5[32];
+        sprintf(float_str1, "%d", filters);
+        sprintf(float_str2, "%f", saturation);
+        sprintf(float_str3, "%f", thresholdbina);
+        sprintf(float_str4, "%f", thresholdclass);
+        sprintf(float_str5, "%d", workers);
         strcat(flag1,prefix);
-        sprintf(arg1,"%d",filters);
-        strcat(flag2,arg1);
-        sprintf(arg2,"%d",workers);
-        strcat(flag3,arg2);
-        sprintf(arg3,"%d",saturation);
-        strcat(flag4,arg3);
-        sprintf(arg4,"%d",thresholdbina);
-        strcat(flag5,arg4);
+        strcat(flag2,float_str1);
+        strcat(flag3,float_str2);
+        strcat(flag4,float_str3);
+        strcat(flag5,float_str4);
+        strcat(flag6,float_str5);
         char* argv[] = {"./broker",flag1,flag2,flag3,flag4,flag5,NULL};
         execv(argv[0],argv);
         return;
 
     } else {
         
-        sem_wait(&mutexMain); // Esperar a que el semáforo mutexMain esté disponible
+        sem_wait(mutex_main); // Esperar a que el semáforo mutexMain esté disponible
     }
     
     return 0;

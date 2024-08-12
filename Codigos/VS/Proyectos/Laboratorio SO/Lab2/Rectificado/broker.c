@@ -2,6 +2,12 @@
 
 int main(int argc, char *argv[]){
 
+    sem_t *mutex_main = sem_open("/mutex_main", 0); // No se crea, solo se abre
+    if (mutex_main == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
     char* prefix; // Prefijo de las imágenes
     int filters = 3,option,workers; 
     float saturation = 1.3;  
@@ -79,12 +85,6 @@ int main(int argc, char *argv[]){
     
     }
 
-    //Inicio los pipes
-    if (pipe(pipe_child_to_parent) == -1 || pipe(pipe_parent_to_child) == -1) {
-        perror("pipe");
-        exit(EXIT_FAILURE);
-    }
-
     char** filenames = file_names(prefix); // Obtener los nombres de los archivos con el prefijo especificado
         
     if (filenames == NULL || *filenames == NULL) {
@@ -108,41 +108,48 @@ int main(int argc, char *argv[]){
 
         if(filters == 1){ // Aplicar el filtro de saturación
 
-            BMPImage** imageSplit1 = split_image(image, workers); // Dividir la imagen en partes
+            BMPImage** imageSplit1 = (BMPImage**)malloc(sizeof(BMPImage*) * workers);
+            imageSplit1 = split_image(image, workers); // Dividir la imagen en partes
             imageSplit1 = send_and_receive(imageSplit1,workers,1,saturation,thresholdbina);
             BMPImage* imageRestored1 = reassemble_image(imageSplit1,workers);//Enviar , recibir y armar
             char *saturatedname = strcat(prefix, "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
-            write_bmp(imageRestored1, saturatedname); // Escribir la imagen saturada en un archivo
+            write_bmp(saturatedname,imageRestored1); // Escribir la imagen saturada en un archivo
             classify(image,thresholdclass);
             write_csv(image,csvname); // Escribir en el archivo csv
             move_file(saturatedname,foldername); // Mover el archivo de la imagen saturada al directorio especificado
+            free(imageSplit1);
+            free_bmp(imageRestored1);
             
         }
 
         if(filters == 2){ // Aplicar el filtro de escala de grises y saturacion
 
-            BMPImage** imageSplit1 = split_image(image, workers);
-            BMPImage** imageSplit2 = split_image(image, workers);
+            BMPImage** imageSplit1 = (BMPImage**)malloc(sizeof(BMPImage*) * workers);
+            BMPImage** imageSplit2 = (BMPImage**)malloc(sizeof(BMPImage*) * workers);
             imageSplit1 = send_and_receive(imageSplit1,workers,1,saturation,thresholdbina);
             imageSplit2 = send_and_receive(imageSplit1,workers,2,saturation,thresholdbina);
             BMPImage* imageRestored1 = reassemble_image(imageSplit1,workers);
             BMPImage* imageRestored2= reassemble_image(imageSplit2,workers);//Enviar , recibir y armar
             char *saturatedname = strcat(strcpy(filename_copy, filename), "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
-            move_file(saturatedname,foldername); // Mover el archivo de la imagen saturada al directorio especificado
             char *grayname = strcat(strcpy(filename_copy, filename), "_grayscale.bmp"); // Crear el nombre del archivo de la imagen en escala de grises
-            write_bmp(imageRestored1, saturatedname);
-            write_bmp(imageRestored2, grayname);
+            write_bmp(saturatedname,imageRestored1);
+            write_bmp(grayname,imageRestored2);
             classify(image,thresholdclass); // Clasificar la imagen
             write_csv(image,csvname);
+            move_file(saturatedname,foldername); // Mover el archivo de la imagen saturada al directorio especificado
             move_file(grayname,foldername); // Mover el archivo de la imagen en escala de grises al directorio especificado
+            free(imageSplit1);
+            free(imageSplit2);
+            free_bmp(imageRestored1);
+            free_bmp(imageRestored2);
            
         }
 
         if (filters == 3) { // Aplicar los tres filtros
 
-            BMPImage** imageSplit1 = split_image(image, workers);
-            BMPImage** imageSplit2 = split_image(image, workers);
-            BMPImage** imageSplit3 = split_image(image, workers);
+            BMPImage** imageSplit1 = (BMPImage**)malloc(sizeof(BMPImage*) * workers);
+            BMPImage** imageSplit2 = (BMPImage**)malloc(sizeof(BMPImage*) * workers);
+            BMPImage** imageSplit3 = (BMPImage**)malloc(sizeof(BMPImage*) * workers);
             imageSplit1 = send_and_receive(imageSplit1,workers,1,saturation,thresholdbina);
             imageSplit2 = send_and_receive(imageSplit1,workers,2,saturation,thresholdbina);
             imageSplit3 = send_and_receive(imageSplit1,workers,3,saturation,thresholdbina);
@@ -150,31 +157,32 @@ int main(int argc, char *argv[]){
             BMPImage* imageRestored2= reassemble_image(imageSplit2,workers);
             BMPImage* imageRestored3 = reassemble_image(imageSplit3,workers);//Enviar , recibir y armar
             char *saturatedname = strcat(strcpy(filename_copy, filename), "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
-            move_file(saturatedname, foldername);
             char *grayname = strcat(strcpy(filename_copy, filename), "_grayscale.bmp"); // Crear el nombre del archivo de la imagen en escala de grises
-            move_file(grayname, foldername); // Mover el archivo de la imagen en escala de grises al directorio especificado
             char *binarname = strcat(strcpy(filename_copy, filename), "_binarization.bmp"); 
-            write_bmp(imageRestored1, saturatedname);
-            write_bmp(imageRestored2, grayname);
-            write_bmp(imageRestored3, binarname);
+            write_bmp(saturatedname,imageRestored1);
+            write_bmp(grayname,imageRestored2);
+            write_bmp(binarname,imageRestored3);
             classify(image, thresholdclass);
             write_csv(image, csvname);
+            move_file(saturatedname, foldername);
             move_file(binarname, foldername);
+            move_file(grayname, foldername); // Mover el archivo de la imagen en escala de grises al directorio especificado
+            free(imageSplit1);
+            free(imageSplit2);
+            free(imageSplit3);
+            free_bmp(imageRestored1);
+            free_bmp(imageRestored2);
+            free_bmp(imageRestored3);
         }
 
         free_bmp(image); // Liberar la memoria de la imagen original
         *filenames++; // Mover el puntero al siguiente nombre de archivo
     }
 
-    //"Eliminamos" los pipes cerrando su entrada en la tabla de descriptores
-    close(pipe_child_to_parent[0]);
-    close(pipe_child_to_parent[1]); 
-    close(pipe_parent_to_child[0]);
-    close(pipe_parent_to_child[1]);
     free(prefix); // Liberar la memoria de prefix
     free(foldername); // Liberar la memoria de foldername
     free(csvname); // Liberar la memoria de csvname
-    sem_post(&mutexMain);
-    
+    sem_post(mutex_main);
+
     return 0;
 }

@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <semaphore.h>
 #include <bits/getopt_core.h>
+#include <fcntl.h>
 
 #pragma pack(push, 1)
  //cuando se trabaja con uint se usa para leer directamente los bytes de la imagen, push hace que la estructura se lea byte por byte y pop hace que se lea de forma normal
@@ -46,11 +47,6 @@ typedef struct {
     int type; //  Clasificacion que se detallara en el archivo .csv donde 1=nearly black y 0=no nearly black
     RGBPixel *data; // Puntero a los píxeles de la imagen
 } BMPImage;
-
-sem_t mutexMain;
-sem_t mutexWorker;
-int pipe_parent_to_child[2]; 
-int pipe_child_to_parent[2];
 
 BMPImage* read_bmp(const char* filename); 
 void free_bmp(BMPImage* image);

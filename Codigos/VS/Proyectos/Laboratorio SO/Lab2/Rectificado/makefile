@@ -1,16 +1,22 @@
-all: lab2.o funciones.o lab2
+all: fworker.o fbroker.o worker broker lab2
 
-funciones.o: funciones.c funciones.h
-		gcc -g -c funciones.c 
+fworker.o: fworker.c fworker.h
+		gcc -g -c fworker.c 
 
-lab2.o: lab2.c funciones.h
-		gcc -g -c lab2.c 
+fbroker.o: fbroker.c fbroker.h
+		gcc -g -c fbroker.c
 
-lab: funciones.o lab2.o
-		gcc -g -o lab2 funciones.o lab2.o
+worker: fworker.o worker.c
+		gcc -g fworker.o worker.c -o worker
+
+broker: fworker.o fbroker.o broker.c
+		gcc -g fworker.o fbroker.o broker.c -o broker
+
+lab2: fworker.o fbroker.o lab2.o
+		gcc -g -o fworker.o fbroker.o lab2 funciones.o lab2.o
 
 clean:
-		rm -f lab2 funciones.o lab2.o
+		rm -f lab2 fworker.o fbroker.o wroker broker lab2
 
 #Posibles comandos por consola luego de compilar
 #./lab1 -N ejemplo -C directorio -R tabla

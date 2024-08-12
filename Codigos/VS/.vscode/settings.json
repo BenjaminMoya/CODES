@@ -70,7 +70,10 @@
         "valarray": "cpp",
         "types.h": "c",
         "stdlib.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "string_view": "c",
+        "ranges": "c",
+        "span": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
