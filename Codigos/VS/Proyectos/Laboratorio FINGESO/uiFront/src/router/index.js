@@ -7,7 +7,7 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            component: () => import('../views/userAnonSolititation.vue'),
+            component: () => import('../views/anonMain.vue'),
             alias: '/inicio',
         },
         {

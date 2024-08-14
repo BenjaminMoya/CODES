@@ -78,17 +78,17 @@ bool Tree::checkVisit(Node* n){
 void Tree::getBound(char* filename){ 
     
     while(!toVisit.empty()){
-
+       
         if(bestNode != nullptr && bestInteger != nullptr && bestNode->eq(bestInteger)){
 
             break;
         }
-
+        
         set<Node*>::iterator it = toVisit.begin();
         Node* aux = *(it);
-
-        if(!checkVisit(aux)){
-
+        
+        if(!checkVisit(aux)){//se cayo pipipip
+            
             visited.insert(aux);
             aux->getBranch(filename);
 
@@ -96,7 +96,7 @@ void Tree::getBound(char* filename){
                 
                 Node* temp = aux->compareFractionary(aux->getRight(),aux->getLeft());
                 Node* temp2 = aux->compareInteger(aux->getLeft(),aux->getRight());
-                
+
                 if(bestNode == nullptr){
                     
                     bestNode = temp;
@@ -105,17 +105,17 @@ void Tree::getBound(char* filename){
                     toVisit.insert(aux->getRight());
 
                 } else {
-
+                    
                     bestNode = aux->compareFractionary(temp,bestNode);
                     bestInteger = aux->compareInteger(temp2,bestInteger);
                     toVisit.insert(aux->getLeft());
                     toVisit.insert(aux->getRight());
-                
+                    
                 }
             }
 
             if(aux->getLeft() != nullptr && aux->getRight() == nullptr){
-                
+
                 Node* temp = aux->getLeft();
                 if(bestNode == nullptr){
                     
@@ -127,7 +127,7 @@ void Tree::getBound(char* filename){
                     toVisit.insert(temp);
 
                 } else {
-                        
+
                     bestNode = aux->compareFractionary(temp,bestNode);
                     bestInteger = aux->compareInteger(temp,bestInteger);
                     toVisit.insert(temp);

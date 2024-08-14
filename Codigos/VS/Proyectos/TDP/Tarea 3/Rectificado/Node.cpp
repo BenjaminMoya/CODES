@@ -150,7 +150,7 @@ Node* Node::compareFractionary(Node* n1, Node* n2){ //Retorna el menos fracciona
 }
 
 Node* Node::compareInteger(Node* n1,Node* n2){ 
-
+    
     if(n1 == nullptr && n2 == nullptr){
 
         return nullptr;
@@ -161,15 +161,16 @@ Node* Node::compareInteger(Node* n1,Node* n2){
 
         return n2;
     } else {
-
+        
         if(!n1->getIntegerSolve() && n2->getIntegerSolve()) {
-
-            return n2;
+            
+            return n2; //aqui se cae
         } else if(n1->getIntegerSolve() && !n2->getIntegerSolve()){
-
+           
             return n1;
-        } else {
-
+        } else if(n1->getIntegerSolve() && n2->getIntegerSolve()) {
+            
+            
             if(n1->getZsup() > n2->getZsup()){
 
                 return n1;
@@ -180,6 +181,10 @@ Node* Node::compareInteger(Node* n1,Node* n2){
 
                 return n1;
             }
+
+        } else {
+            
+            return nullptr;
         }
     }
 

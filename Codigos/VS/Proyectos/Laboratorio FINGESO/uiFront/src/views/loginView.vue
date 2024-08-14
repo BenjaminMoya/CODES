@@ -152,17 +152,17 @@ export default{ // me sale error pero no cache como solucionarlo....
 <style scoped>
 .general{
 
-    background-image: url("./media/usach.jpg");
-
-    height: 100vh;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
+    background: linear-gradient(45deg, #ffffff, #ffb6c1, #00aaff, #800080);
 
     display: flex;
     justify-content: center;
     align-items: center;
-    align-content: center;
+    background: linear-gradient(45deg, #ffffff, #ffb6c1, #00aaff, #800080);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    height: auto; /* Ajusta la altura según el contenido */
+    min-height: 100vh;
 }
 .sessionButton{
 
