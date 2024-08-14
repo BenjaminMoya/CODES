@@ -73,7 +73,8 @@
         "stdio.h": "c",
         "string_view": "c",
         "ranges": "c",
-        "span": "c"
+        "span": "c",
+        "any": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

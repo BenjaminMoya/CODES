@@ -173,144 +173,187 @@ char** file_names(const char *prefix) {
     return file_names;
 }
 
-BMPImage** divide_image(BMPImage *image, int workers){
-    int columns_per_worker = image->width / workers;
-    int remainder_columns = image->width % workers;
-    BMPImage** sub_images;
+BMPImage** split_image(BMPImage *image, int num_workers) {
+    int width_per_worker = image->width / num_workers;
+    int remaining_width = image->width % num_workers;
 
-    for (int i = 0; i < workers; i++) {
-        sub_images[i] = (BMPImage*)malloc(sizeof(BMPImage));
-        sub_images[i]->width = columns_per_worker + (i < remainder_columns ? 1 : 0);
-        sub_images[i]->height = image->height;
-        sub_images[i]->data = (RGBPixel*)malloc(sub_images[i]->width * image->height * sizeof(RGBPixel));
+    BMPImage **subimages = malloc(num_workers * sizeof(BMPImage*));
+    for (int i = 0; i < num_workers; i++) {
+        int start_col = i * width_per_worker;
+        int end_col = (i + 1) * width_per_worker;
 
-        int offset = i * columns_per_worker + (i < remainder_columns ? i : remainder_columns);
-        for (int y = 0; y < image->height; y++) {
-            memcpy(&sub_images[i]->data[y * sub_images[i]->width], 
-                   &image->data[y * image->width + offset], 
-                   sub_images[i]->width * sizeof(RGBPixel));
+        if (i == num_workers - 1) {
+            // Último worker recibe las columnas adicionales si existen
+            end_col += remaining_width;
         }
-    }
 
-    return sub_images;
+        int subimage_width = end_col - start_col;
+
+        // Crear la subimagen para este worker
+        BMPImage *subimage = malloc(sizeof(BMPImage));
+        subimage->name = image->name; // O asignar un nombre único
+        subimage->width = subimage_width;
+        subimage->height = image->height;
+        subimage->type = image->type;
+        subimage->data = malloc(subimage_width * image->height * sizeof(RGBPixel));
+
+        // Copiar los datos de la imagen original a la subimagen
+        for (int y = 0; y < image->height; y++) {
+            for (int x = 0; x < subimage_width; x++) {
+                subimage->data[y * subimage_width + x] = image->data[y * image->width + (start_col + x)];
+            }
+        }
+
+        subimages[i] = subimage;
+    }
+    return subimages;
 }
 
-BMPImage* reassemble_image(BMPImage **sub_images, int num_workers) {
-    int total_width = 0;
-    int height = sub_images[0]->height;
+// Liberar memoria de las subimágenes generadas
+void free_subimages(BMPImage **subimages, int num_workers) {
     for (int i = 0; i < num_workers; i++) {
-        total_width += sub_images[i]->width;
+        free(subimages[i]->data);
+        free(subimages[i]);
+    }
+    free(subimages);
+}
+
+
+BMPImage* reassemble_image(BMPImage **subimages, int num_workers) {
+    if (num_workers < 1) {
+        return NULL;
     }
 
-    BMPImage *full_image = (BMPImage*)malloc(sizeof(BMPImage));
-    full_image->width = total_width;
-    full_image->height = height;
-    full_image->data = (RGBPixel*)malloc(total_width * height * sizeof(RGBPixel));
+    // Calcular el ancho total de la imagen original
+    int total_width = 0;
+    int height = subimages[0]->height;  // Todas las subimágenes tienen la misma altura
 
-    int offset = 0;
+    for (int i = 0; i < num_workers; i++) {
+        total_width += subimages[i]->width;
+    }
+
+    // Crear la imagen restaurada
+    BMPImage *restored_image = malloc(sizeof(BMPImage));
+    restored_image->name = "Restored Image";  // O asignar un nombre adecuado
+    restored_image->width = total_width;
+    restored_image->height = height;
+    restored_image->type = subimages[0]->type;  // Se asume que todas las subimágenes tienen el mismo tipo
+    restored_image->data = malloc(total_width * height * sizeof(RGBPixel));
+
+    // Copiar los datos de las subimágenes a la imagen restaurada
+    int current_col = 0;
     for (int i = 0; i < num_workers; i++) {
         for (int y = 0; y < height; y++) {
-            memcpy(&full_image->data[y * total_width + offset], 
-                   &sub_images[i]->data[y * sub_images[i]->width], 
-                   sub_images[i]->width * sizeof(RGBPixel));
+            for (int x = 0; x < subimages[i]->width; x++) {
+                restored_image->data[y * total_width + (current_col + x)] = subimages[i]->data[y * subimages[i]->width + x];
+            }
         }
-        offset += sub_images[i]->width;
+        current_col += subimages[i]->width;
     }
 
-    return full_image;
+    return restored_image;
 }
 
-BMPImage** send_and_receive(BMPImage** imageSplit, int workers, int filter, float saturation, float thresholdbina){
+BMPImage** send_and_receive(BMPImage** imageSplit, int num_workers, int filter_opt, float saturation_fact, float threshold_bina){
 
-    sem_t *mutex_broker = sem_open("/mutex_broker", O_CREAT | O_EXCL, 0644, 0);
-    if (mutex_broker == SEM_FAILED) {
-        perror("sem_open");
-        exit(EXIT_FAILURE);
-    }
-    sem_t *mutex_worker = sem_open("/mutex_worker", O_CREAT | O_EXCL, 0644, 0);
-    if (mutex_worker == SEM_FAILED) {
-        perror("sem_open");
-        exit(EXIT_FAILURE);
-    }
+    int fd[num_workers][2];  
+    int fd2[num_workers][2];
+    int flag = -1;
+    int pids[num_workers];
+    pid_t pid;
+    size_t pixel_data_size;
 
-    int pipe_parent_to_child[2];
-    int pipe_child_to_parent[2];
+    for (int i = 0; i < num_workers; i++){ // crear hijos
 
-    close(pipe_parent_to_child[1]); // No se usa el descriptor de escritura hacia el padre
-    close(pipe_child_to_parent[0]); // No se usa el descriptor de lectura hacia el padre
-
-    for (int i = 0; i < workers; i++) {
-        // Crear pipes
-        if (pipe(pipe_parent_to_child) == -1 || pipe(pipe_child_to_parent) == -1) {
-            perror("pipe");
-            exit(EXIT_FAILURE);
+        pid = fork();
+        if (pid == 0){  // si corresponden a los procesos hijos, se les asociará banderas
+            flag= i; // solo los hijos tendrán esa bandera en positivo (indice)
+            break; // el padre conservará su bandera en -1
         }
-        
-        pid_t pid = fork();
-        if (pid == -1) {
-            perror("fork");
-            exit(EXIT_FAILURE);
-        }
-        
-        if (pid == 0) { // Proceso hijo
+        else if (pid > 0){
 
-            close(pipe_parent_to_child[1]); // No se usa el descriptor de escritura hacia el padre
-            close(pipe_child_to_parent[0]); // No se usa el descriptor de lectura desde el padre
-            // Redirigir stdin y stdout
-            dup2(pipe_parent_to_child[0], STDIN_FILENO);  // Redirige stdin del hijo al pipe de entrada
-            dup2(pipe_child_to_parent[1], STDOUT_FILENO); // Redirige stdout del hijo al pipe de salida
-
-            //Ejecutar el programa deseado
-            char flag1[]="-f ",flag2[]="-p ",flag3[]="-u ";
-            char float_str1[32],float_str2[32],float_str3[32];
-            sprintf(float_str1,"%d",filter);
-            sprintf(float_str2,"%f",saturation);
-            sprintf(float_str3,"%f",thresholdbina);
-            strcat(flag1,float_str1);
-            strcat(flag2,float_str2);
-            strcat(flag3,float_str3);
-            char* argv[] = {"./worker",flag1,flag2,flag3,NULL};
-            execv(argv[0],argv);
-            exit(0);
-
-        } else { // Proceso padre tiene que esperar a que termine el hijo para buscar en el pipe lo que hizo el hijo
-
-            close(pipe_parent_to_child[0]); // No se usa el descriptor de lectura desde el hijo
-            close(pipe_child_to_parent[1]); // No se usa el descriptor de escritura hacia el hijo
-
-            // Enviar datos al hijo
-            ssize_t bytes_written = write(pipe_child_to_parent[1], imageSplit[i], sizeof(imageSplit[i]));
-            if (bytes_written != sizeof(imageSplit[i])) {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
-            bytes_written = write(pipe_child_to_parent[1], imageSplit[i]->data, imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel));
-            if (bytes_written != imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel)) {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
-            sem_post(mutex_worker); //Le avisa al worker que ya puede empezar a trabajar
-            sem_wait(mutex_broker); //Espera a que el worker termine su ejecucion
-
-            //Leer y guardar la imagen procesada
-            imageSplit[i]->data = malloc(imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel));
-            if (imageSplit[i]->data == NULL) {
-                perror("malloc");
-                exit(EXIT_FAILURE);
-            }
-            ssize_t bytes_read = read(pipe_parent_to_child[0], imageSplit[i], sizeof(imageSplit[i]));
-            if (bytes_read != sizeof(imageSplit[i])) {
-                perror("read");
-                exit(EXIT_FAILURE);
-            }
-            bytes_read = read(pipe_parent_to_child[0], imageSplit[i]->data, imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel));
-            if (bytes_read != imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel)) {
-                perror("read");
-                exit(EXIT_FAILURE);
-            }
-
-            close(pipe_child_to_parent[1]);
-            close(pipe_parent_to_child[0]);
+            pids[i] = pid; // guardar los pids de los hijos
+            
         }
     }
+
+    if (pid == -1){
+        printf("Error");
+        exit(1);
+
+    } else if (pid == 0){ // si es el proceso hijo
+
+        for (int i = 0; i < num_workers; i++){ //Revisar desde aqui
+
+            if (flag == i){ // si es el proceso hijo i
+                // Cerrar escritura de pipe hijos
+                close(fd[i][1]);
+                // Cerrar lectura de pipe padre
+                close(fd2[i][0]);
+
+                // Redirigir lectura del pipe hijo a STDIN
+                dup2(fd[i][0], STDIN_FILENO);
+                close(fd[i][0]); // Cerrar lectura del hijo (buena practica)
+
+                // Redigir escritura del pipe padre a STDOUT
+                dup2(fd2[i][1], STDOUT_FILENO);
+                close(fd2[i][1]); // Cerrar escritura del padre (buena practica)
+
+                // Ejecutar el programa worker en donde procesos hijos leeran
+                char int_str1[32],float_str2[32],float_str3[32];
+                sprintf(int_str1,"%d",filter_opt);
+                sprintf(float_str2,"%f",saturation_fact);
+                sprintf(float_str3,"%f",threshold_bina);
+                char* argv[] = {"./worker",int_str1,float_str2,float_str3,NULL};
+                execv(argv[0],argv);    
+                printf("Error en la ejecucion del worker"); // si hay error en el execv
+                exit(1);
+            }
+        }
+
+    } else { // Envio de la imagen por el
+
+        // Cerrar los extremos no utilizados del primer y segundo pipe
+        for (int i = 0; i < num_workers; i++)
+        {
+            close(fd[i][0]);   // Extremo de lectura del primer pipe
+            write(fd[i][1], &imageSplit[i]->width, sizeof(int));  // Enviar el ancho
+            write(fd[i][1], &imageSplit[i]->height, sizeof(int)); // Enviar el alto
+            write(fd[i][1], &imageSplit[i]->type, sizeof(int));   // Enviar el tipo
+            pixel_data_size = imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel);
+            write(fd[i][1], &imageSplit[i]->data, pixel_data_size); 
+            close(fd2[i][1]); // Extremo de escritura del segundo pipe
+        }
+
+        // Esperar a que terminen los procesos hijos
+        for (size_t i = 0; i < num_workers; i++)
+        {
+            waitpid(pids[i], NULL, 0);
+        }
+
+        // Leer y reemplazar las imagenes de cada pipe
+        for (int i = 0; i < num_workers; i++)
+        {   
+            close(fd2[i][1]);
+            BMPImage *processed_image = malloc(sizeof(BMPImage));
+            read(fd2[i][0], &processed_image->width, sizeof(int));
+            read(fd2[i][0], &processed_image->height, sizeof(int));
+            read(fd2[i][0], &processed_image->type, sizeof(int));
+
+            // Reservar memoria para los píxeles de la imagen procesada
+            pixel_data_size = processed_image->width * processed_image->height * sizeof(RGBPixel);
+            processed_image->data = (RGBPixel *)malloc(pixel_data_size);
+
+            // Leer los píxeles de la imagen procesada
+            read(fd2[i][0], &processed_image->data, pixel_data_size);
+            imageSplit[i] = processed_image;
+            free_bmp(processed_image);
+            close(fd2[i][0]);
+        }
+
+        return imageSplit;
+    }
+
+    return 0;
 }
+    

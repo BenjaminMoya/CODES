@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <semaphore.h>
 #include <bits/getopt_core.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 
 #pragma pack(push, 1)
