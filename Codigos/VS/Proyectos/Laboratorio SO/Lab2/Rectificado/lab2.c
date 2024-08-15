@@ -4,13 +4,13 @@ int main(int argc, char *argv[]) {
     
     int num_filters = 3;
     int opt_option;
-    int num_workers;
+    int num_workers = 0;
     float saturation_fact = 1.3;  
     float threshold_bina= 0.5;
     float threshold_class = 0.5;
-    char* img_prefix;
-    char* folder_name;
-    char* csv_name;
+    char* img_prefix = NULL;
+    char* folder_name = NULL; 
+    char* csv_name = NULL;
 
     while((opt_option = getopt(argc, argv, "N:f:p:u:v:C:R:W:")) != -1){ // Ciclo para leer las opciones ingresadas por el usuario
 
@@ -18,14 +18,8 @@ int main(int argc, char *argv[]) {
 
             case 'N': // Opción para ingresar el prefijo de las imágenes
             
-                img_prefix = (char*)malloc(strlen(optarg) + 1); // Asignación de memoria para img_prefix
-                if(img_prefix != NULL) {
-                    strcpy(img_prefix, optarg);
-                } else {
-                    // Manejo de error si malloc falla en asignar memoria
-                    printf("Error: No se pudo asignar memoria para prefix\n");
-                    exit(EXIT_FAILURE);
-                }
+                img_prefix = optarg;
+                break;
             
             case 'f': // Opción para ingresar el número de filtro a aplicar
                 
@@ -61,22 +55,12 @@ int main(int argc, char *argv[]) {
             
             case 'C': // Opción para ingresar el nombre del directorio donde se guardarán las imágenes
            
-                folder_name = malloc(strlen(optarg) + 1); // Asignar memoria dinámica
-                if (folder_name == NULL) {
-                    fprintf(stderr, "Error: No se pudo asignar memoria.\n");
-                    return EXIT_FAILURE;
-                }
-                strcpy(folder_name, optarg); // Copiar el nombre del directorio
+                folder_name = optarg;
                 break;
             
             case 'R': // Opción para ingresar el nombre del archivo csv
            
-                csv_name = malloc(strlen(optarg) + 1); // Asignar memoria dinámica
-                if (csv_name == NULL) {
-                    fprintf(stderr, "Error: No se pudo asignar memoria.\n");
-                    return EXIT_FAILURE;
-                }
-                strcpy(csv_name, optarg); // Copiar el nombre del archivo CSV
+                csv_name = optarg;
                 break;
 
             case 'W': // Opción para ingresar el número de trabajadores
@@ -134,7 +118,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    csv_name= strcat(csv_name,".csv"); // Agregar la extensión .csv al nombre del archivo csv
+    csv_name = strcat(csv_name,".csv"); // Agregar la extensión .csv al nombre del archivo csv
     new_folder(folder_name); // Crear el directorio donde se guardarán las imágenes
     new_csv(csv_name); // Crear el archivo csv
 

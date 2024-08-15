@@ -7,13 +7,13 @@ fbroker.o: fbroker.c fbroker.h
 		gcc -g -c fbroker.c
 
 worker: fworker.o worker.c
-		gcc -g fworker.o worker.c -o worker
+		gcc -fsanitize=address -g fworker.o worker.c -o worker
 
 broker: fworker.o fbroker.o broker.c
-		gcc -g fworker.o fbroker.o broker.c -o broker
+		gcc -fsanitize=address -g fworker.o fbroker.o broker.c -o broker
 
 lab2: fworker.o fbroker.o lab2.c
-		gcc -g fworker.o fbroker.o lab2.c -o lab2
+		gcc -fsanitize=address -g fworker.o fbroker.o lab2.c -o lab2
 
 clean:
 		rm -f lab2 fworker.o fbroker.o worker broker lab2 

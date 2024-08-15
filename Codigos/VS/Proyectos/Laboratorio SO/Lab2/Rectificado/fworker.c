@@ -5,6 +5,7 @@
 //Salida: estructura BMPImage que le corresponde al nombre en directorio
 //Descripción: lee un archivo BMP y retorna una estructura BMPImage para su manipulacion
 BMPImage* read_bmp(const char* filename) {
+    
     FILE* file = fopen(filename, "rb"); //rb = read binary
     if (!file) {
         fprintf(stderr, "Error: No se pudo abrir el archivo.\n");

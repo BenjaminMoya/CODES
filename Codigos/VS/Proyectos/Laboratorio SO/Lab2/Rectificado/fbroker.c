@@ -255,105 +255,82 @@ BMPImage* reassemble_image(BMPImage **subimages, int num_workers) {
 }
 
 BMPImage** send_and_receive(BMPImage** imageSplit, int num_workers, int filter_opt, float saturation_fact, float threshold_bina){
-
-    int fd[num_workers][2];  
-    int fd2[num_workers][2];
-    int flag = -1;
-    int pids[num_workers];
+    
+    int fd[2];  
+    int fd2[2];
     pid_t pid;
     size_t pixel_data_size;
 
     for (int i = 0; i < num_workers; i++){ // crear hijos
 
+        if (pipe(fd) == -1 || pipe(fd2) == -1) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
+        printf("Pipe creado\n");
         pid = fork();
-        if (pid == 0){  // si corresponden a los procesos hijos, se les asociará banderas
-            flag= i; // solo los hijos tendrán esa bandera en positivo (indice)
-            break; // el padre conservará su bandera en -1
-        }
-        else if (pid > 0){
+        if(pid == -1){
 
-            pids[i] = pid; // guardar los pids de los hijos
-            
-        }
-    }
+            printf("Error");
+            exit(EXIT_FAILURE);
 
-    if (pid == -1){
-        printf("Error");
-        exit(1);
+        } else if (pid == 0){ // si es el proceso hijo
+            printf("Proceso hijo\n");
+            // Cerrar extremos no utilizados del pipe
+            close(fd[1]); // Cerrar escritura del pipe principal
+            close(fd2[0]); // Cerrar lectura del pipe para la salida del hijo
 
-    } else if (pid == 0){ // si es el proceso hijo
+            // Redirigir stdin y stdout
+            dup2(fd[0], STDIN_FILENO);
+            dup2(fd2[1], STDOUT_FILENO);
+            close(fd[0]);
+            close(fd2[1]);
 
-        for (int i = 0; i < num_workers; i++){ //Revisar desde aqui
+            char int_str1[32],float_str2[32],float_str3[32];
+            sprintf(int_str1,"%d",filter_opt);
+            sprintf(float_str2,"%f",saturation_fact);
+            sprintf(float_str3,"%f",threshold_bina);
+            char* argv[] = {"./worker",int_str1,float_str2,float_str3,NULL};
+            printf("Ejecutando worker\n");
+            execv(argv[0],argv);    
+            printf("Error en la ejecucion del worker"); // si hay error en el execv
+            exit(EXIT_FAILURE);
 
-            if (flag == i){ // si es el proceso hijo i
-                // Cerrar escritura de pipe hijos
-                close(fd[i][1]);
-                // Cerrar lectura de pipe padre
-                close(fd2[i][0]);
-
-                // Redirigir lectura del pipe hijo a STDIN
-                dup2(fd[i][0], STDIN_FILENO);
-                close(fd[i][0]); // Cerrar lectura del hijo (buena practica)
-
-                // Redigir escritura del pipe padre a STDOUT
-                dup2(fd2[i][1], STDOUT_FILENO);
-                close(fd2[i][1]); // Cerrar escritura del padre (buena practica)
-
-                // Ejecutar el programa worker en donde procesos hijos leeran
-                char int_str1[32],float_str2[32],float_str3[32];
-                sprintf(int_str1,"%d",filter_opt);
-                sprintf(float_str2,"%f",saturation_fact);
-                sprintf(float_str3,"%f",threshold_bina);
-                char* argv[] = {"./worker",int_str1,float_str2,float_str3,NULL};
-                execv(argv[0],argv);    
-                printf("Error en la ejecucion del worker"); // si hay error en el execv
-                exit(1);
-            }
-        }
-
-    } else { // Envio de la imagen por el
-
-        // Cerrar los extremos no utilizados del primer y segundo pipe
-        for (int i = 0; i < num_workers; i++)
-        {
-            close(fd[i][0]);   // Extremo de lectura del primer pipe
-            write(fd[i][1], &imageSplit[i]->width, sizeof(int));  // Enviar el ancho
-            write(fd[i][1], &imageSplit[i]->height, sizeof(int)); // Enviar el alto
-            write(fd[i][1], &imageSplit[i]->type, sizeof(int));   // Enviar el tipo
+        } else { // Envio de la imagen por el
+            printf("Proceso padre\n");
+            close(fd[0]); // Cerrar lectura del pipe principal
+            close(fd2[1]); // Cerrar escritura del pipe para la salida del hijo
+            printf("Enviando imagen\n");
+            // Enviar la imagen al hijo
+            write(fd[1], &imageSplit[i]->width, sizeof(int));
+            write(fd[1], &imageSplit[i]->height, sizeof(int));
+            write(fd[1], &imageSplit[i]->type, sizeof(int));
             pixel_data_size = imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel);
-            write(fd[i][1], &imageSplit[i]->data, pixel_data_size); 
-            close(fd2[i][1]); // Extremo de escritura del segundo pipe
-        }
-
-        // Esperar a que terminen los procesos hijos
-        for (size_t i = 0; i < num_workers; i++)
-        {
-            waitpid(pids[i], NULL, 0);
-        }
-
-        // Leer y reemplazar las imagenes de cada pipe
-        for (int i = 0; i < num_workers; i++)
-        {   
-            close(fd2[i][1]);
+            write(fd[1], imageSplit[i]->data, pixel_data_size);
+            close(fd[1]); // Cerrar escritura después de enviar todos los datos
+            printf("Imagen enviada\n");
+            waitpid(pid, NULL, 0);
+            printf("Esperando al hijo\n");
+            close(fd2[1]);
             BMPImage *processed_image = malloc(sizeof(BMPImage));
-            read(fd2[i][0], &processed_image->width, sizeof(int));
-            read(fd2[i][0], &processed_image->height, sizeof(int));
-            read(fd2[i][0], &processed_image->type, sizeof(int));
-
+            read(fd2[0], &processed_image->width, sizeof(int));
+            read(fd2[0], &processed_image->height, sizeof(int));
+            read(fd2[0], &processed_image->type, sizeof(int));
+            printf("Leyendo imagen\n");
             // Reservar memoria para los píxeles de la imagen procesada
             pixel_data_size = processed_image->width * processed_image->height * sizeof(RGBPixel);
             processed_image->data = (RGBPixel *)malloc(pixel_data_size);
 
             // Leer los píxeles de la imagen procesada
-            read(fd2[i][0], &processed_image->data, pixel_data_size);
+            read(fd2[0], processed_image->data, pixel_data_size);
+            close(fd2[0]);
             imageSplit[i] = processed_image;
+            printf("Imagen asignada\n");
             free_bmp(processed_image);
-            close(fd2[i][0]);
         }
 
-        return imageSplit;
     }
 
-    return 0;
-}
-    
+    return imageSplit;
+        
+}   
