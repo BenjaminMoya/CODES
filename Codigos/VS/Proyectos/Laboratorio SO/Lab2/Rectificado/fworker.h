@@ -9,7 +9,8 @@
 #include <bits/getopt_core.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-
+#include <sys/select.h>
+#define BUFFER_SIZE 65536
 #pragma pack(push, 1)
  //cuando se trabaja con uint se usa para leer directamente los bytes de la imagen, push hace que la estructura se lea byte por byte y pop hace que se lea de forma normal
 typedef struct {
@@ -55,3 +56,6 @@ BMPImage* saturate_bmp(BMPImage* image, float factor);
 BMPImage* grayscale(BMPImage* image);
 BMPImage* binarization(BMPImage* image, float umbral);
 void write_bmp(const char* filename, BMPImage* image);
+void sendImg(int fd, BMPImage* imagen, size_t tamaño);
+void receiveImg(int fd, BMPImage* image, size_t tamaño);
+int has_data(int fd);

@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
     float threshold_bina= 0.5;
     float threshold_class = 0.5;
     char* img_prefix = NULL;
-    char* folder_name = NULL; 
+    char* folder_name = NULL;
     char* csv_name = NULL;
 
     while((opt_option = getopt(argc, argv, "N:f:p:u:v:C:R:W:")) != -1){ // Ciclo para leer las opciones ingresadas por el usuario
@@ -18,7 +18,12 @@ int main(int argc, char *argv[]) {
 
             case 'N': // Opción para ingresar el prefijo de las imágenes
             
-                img_prefix = optarg;
+                img_prefix = malloc(strlen(optarg) + 1);
+                if (img_prefix == NULL) {
+                    perror("malloc");
+                    exit(EXIT_FAILURE);
+                }
+                strcpy(img_prefix, optarg);
                 break;
             
             case 'f': // Opción para ingresar el número de filtro a aplicar
@@ -55,12 +60,23 @@ int main(int argc, char *argv[]) {
             
             case 'C': // Opción para ingresar el nombre del directorio donde se guardarán las imágenes
            
-                folder_name = optarg;
+                folder_name = malloc(strlen(optarg) + 1);
+                if (folder_name == NULL) {
+                    perror("malloc");
+                    exit(EXIT_FAILURE);
+                }
+                strcpy(folder_name, optarg);
                 break;
             
             case 'R': // Opción para ingresar el nombre del archivo csv
            
-                csv_name = optarg;
+                csv_name = malloc(strlen(optarg) + 5); // +5 para ".csv" y terminador nulo
+                if (csv_name == NULL) {
+                    perror("malloc");
+                    exit(EXIT_FAILURE);
+                }
+                strcpy(csv_name, optarg);
+                strcat(csv_name, ".csv");
                 break;
 
             case 'W': // Opción para ingresar el número de trabajadores
@@ -118,7 +134,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    csv_name = strcat(csv_name,".csv"); // Agregar la extensión .csv al nombre del archivo csv
     new_folder(folder_name); // Crear el directorio donde se guardarán las imágenes
     new_csv(csv_name); // Crear el archivo csv
 
@@ -133,11 +148,17 @@ int main(int argc, char *argv[]) {
         snprintf(arg5, sizeof(arg5), "%d", num_workers);
         char* args[] = {"./broker",img_prefix,arg1,arg2,arg3,arg4,arg5,folder_name,csv_name,NULL};
         execv(args[0],args);
-        return 0;
+        perror("execv");
+        exit(EXIT_FAILURE);
 
-    } else {
+    } else if(pid > 0){ 
         
+
         waitpid(pid, NULL, 0); //Esperar a que el proceso hijo termine
+    } else {
+
+        perror("fork");
+        return EXIT_FAILURE;
     }
     
     return 0;

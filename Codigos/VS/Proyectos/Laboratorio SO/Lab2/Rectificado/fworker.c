@@ -1,11 +1,10 @@
 #include "fworker.h"
 #pragma pack(pop)
-
+sem_t* mutex;
 //Entrada: nombre del archivo como string 
 //Salida: estructura BMPImage que le corresponde al nombre en directorio
 //Descripción: lee un archivo BMP y retorna una estructura BMPImage para su manipulacion
 BMPImage* read_bmp(const char* filename) {
-    
     FILE* file = fopen(filename, "rb"); //rb = read binary
     if (!file) {
         fprintf(stderr, "Error: No se pudo abrir el archivo.\n");
@@ -208,4 +207,49 @@ void write_bmp(const char* filename, BMPImage* image) {
     }
 
     fclose(file);
+}
+
+void sendImg(int pipe, BMPImage* imagen, size_t tamaño){ 
+
+    size_t enviado = 0;
+    while (enviado < tamaño) {
+        size_t tamañoFragmento = (tamaño - enviado > BUFFER_SIZE) ? BUFFER_SIZE : (tamaño - enviado);
+        ssize_t bytesEscritos = write(pipe, imagen->data + enviado, tamañoFragmento);
+        if (bytesEscritos < 0) {
+            perror("write");
+            return;
+        }
+        enviado += bytesEscritos;
+    }
+}
+
+void receiveImg(int pipe, BMPImage* imagen, size_t tamaño){
+
+    size_t recibido = 0;
+    while (recibido < tamaño) {
+        ssize_t bytesLeidos = read(pipe, imagen->data + recibido, BUFFER_SIZE);
+        if (bytesLeidos < 0) {
+            perror("read");
+            return;
+        }
+        recibido += bytesLeidos;
+    }
+}
+
+int has_data(int fd) {
+    fd_set read_fds;
+    struct timeval timeout;
+
+    FD_ZERO(&read_fds);
+    FD_SET(fd, &read_fds);
+
+    timeout.tv_sec = 0; // Sin espera
+    timeout.tv_usec = 0;
+
+    int ret = select(fd + 1, &read_fds, NULL, NULL, &timeout);
+    if (ret == -1) {
+        perror("select");
+        return -1; // Error
+    }
+    return FD_ISSET(fd, &read_fds);
 }
