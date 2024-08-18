@@ -12,4 +12,4 @@ char** file_names(const char *prefix);
 BMPImage** split_image(BMPImage *image, int workers);
 void free_subimages(BMPImage **subimages, int num_workers);
 BMPImage* combine_images(BMPImage **images, int num_images);
-BMPImage** send_and_receive(BMPImage** imageSplit, int workers, int filter, float saturation, float thresholdbina,int multisplit);
+BMPImage** send_and_receive(BMPImage** imageSplit, int workers, int filter, float saturation, float thresholdbina);

@@ -2,7 +2,6 @@
 
 int main(int argc, char *argv[]) {
 
-    
     int filter_opt = atoi(argv[1]);
     float saturation_fact = atof(argv[2]);
     float threshold_bina = atof(argv[3]);
@@ -40,8 +39,6 @@ int main(int argc, char *argv[]) {
     pixel_data_size = image_read->width * image_read->height * sizeof(RGBPixel);
     write(STDOUT_FILENO, image_read->data, pixel_data_size);
     close(STDOUT_FILENO);
-
-    free_bmp(image_read);
     exit(EXIT_SUCCESS);
     return 0;
 }
