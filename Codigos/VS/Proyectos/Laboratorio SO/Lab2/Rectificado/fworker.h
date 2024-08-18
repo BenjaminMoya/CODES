@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <math.h>
+#include <stdbool.h>
 #include <sys/select.h>
 #define BUFFER_SIZE 65536
 #pragma pack(push, 1)
@@ -57,3 +58,4 @@ BMPImage* saturate_bmp(BMPImage* image, float factor);
 BMPImage* grayscale(BMPImage* image);
 BMPImage* binarization(BMPImage* image, float umbral);
 void write_bmp(const char* filename, BMPImage* image);
+bool isValidBMPImage(const BMPImage *image);

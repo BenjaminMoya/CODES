@@ -31,10 +31,22 @@ int main(int argc, char *argv[]){//no se envian bien los argumentos al broker re
         if(num_filters == 1){ // Aplicar el filtro de saturación
 ;
             if(image->height * image->width/num_workers > BUFFER_SIZE){
-
-                BMPImage** imageSplit1 = split_image(image,(int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                
+                int width_per_worker = image->width / num_workers;
+                int remaining_width = image->width % num_workers;
+                BMPImage** imageSplit1 = (BMPImage**)malloc(sizeof(BMPImage*) * (int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                imageSplit1 = split_image(image,(int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                for(int i = 0; i < (int)ceil((image->height * image->width)/BUFFER_SIZE) + 1; i++){
+                    int subimage_width = width_per_worker + (i < remaining_width ? 1 : 0);
+                    imageSplit1[i]->width = subimage_width;
+                    imageSplit1[i]->height = image->height;
+                }
                 send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina,1);
-                BMPImage* imageRestored1 = reassemble_image(imageSplit1,(int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                printf("Imagen saturada\n");
+                printf("%d",(int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                BMPImage* imageRestored1 = combine_images(imageSplit1,(int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                printf("%d",imageRestored1->height);
+                printf("%d",imageRestored1->width);
                 write_bmp("saturated.bmp",imageRestored1);
                 return 0;//Enviar , recibir y armar
                 char *saturatedname = strcat(img_prefix, "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
@@ -46,10 +58,20 @@ int main(int argc, char *argv[]){//no se envian bien los argumentos al broker re
                 free_bmp(imageRestored1);
 
             } else {
-
-                BMPImage **imageSplit1 = split_image(image, num_workers); 
+                
+                int width_per_worker = image->width / num_workers;
+                int remaining_width = image->width % num_workers;
+                BMPImage** imageSplit1 = split_image(image, num_workers); 
+                for(int i = 0; i < num_workers; i++){
+                    int subimage_width = width_per_worker + (i < remaining_width ? 1 : 0);
+                    imageSplit1[i]->width = subimage_width;
+                    imageSplit1[i]->height = image->height;
+                }
                 imageSplit1 = send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina,0);
-                BMPImage* imageRestored1 = reassemble_image(imageSplit1,num_filters);//Enviar , recibir y armar
+                printf("Imagen saturada\n");
+                BMPImage* imageRestored1 = combine_images(imageSplit1,num_workers);
+                write_bmp("saturated.bmp",imageRestored1);
+                return 0;//Enviar , recibir y armar
                 char *saturatedname = strcat(img_prefix, "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
                 write_bmp(saturatedname,imageRestored1); // Escribir la imagen saturada en un archivo
                 classify(image,threshold_class);
@@ -60,7 +82,7 @@ int main(int argc, char *argv[]){//no se envian bien los argumentos al broker re
             }
 
         }
-
+        /*
         if(num_filters == 2){ // Aplicar el filtro de escala de grises y saturacion
 
             BMPImage** imageSplit1 = split_image(image, num_workers);
@@ -113,7 +135,7 @@ int main(int argc, char *argv[]){//no se envian bien los argumentos al broker re
             free_bmp(imageRestored2);
             free_bmp(imageRestored3);
         }
-
+        */
         free_bmp(image); // Liberar la memoria de la imagen original
         *filenames++; // Mover el puntero al siguiente nombre de archivo
     }

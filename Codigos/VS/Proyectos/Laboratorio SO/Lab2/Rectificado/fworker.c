@@ -26,6 +26,7 @@ BMPImage* read_bmp(const char* filename) {
     image->name = filename;
     image->width = info_header.width;
     image->height = info_header.height;
+    image->type = 0;
     image->data = (RGBPixel*)malloc(sizeof(RGBPixel) * info_header.width * info_header.height);
 
     fseek(file, header.offset, SEEK_SET); // fseek(archivo, desplazamiento, origen desde donde se desplaza SEEK_SET = inicio del archivo, SEEK_CUR = posición actual del archivo, SEEK_END = final del archivo)
@@ -166,10 +167,45 @@ BMPImage* classify(BMPImage* image, float umbral) {
     return image;
 }
 
+bool isValidBMPImage(const BMPImage *image) {
+    // Verificar que el puntero a datos no sea NULL
+    if (image->data == NULL) {
+        fprintf(stderr, "Error: El puntero a los datos de la imagen es NULL.\n");
+        return false;
+    }
+
+    // Verificar que el ancho y alto sean valores positivos
+    if (image->width <= 0 || image->height <= 0) {
+        fprintf(stderr, "Error: El ancho o el alto de la imagen es inválido.\n");
+        return false;
+    }
+
+    // Verificar que el tipo de imagen sea válido (0 o 1)
+    if (image->type != 0 && image->type != 1) {
+        fprintf(stderr, "Error: El tipo de imagen es inválido. Debe ser 0 o 1.\n");
+        return false;
+    }
+
+    // Verificar que los datos de los píxeles sean accesibles
+    size_t dataSize = (size_t)image->width * image->height * sizeof(RGBPixel);
+    if (dataSize == 0) {
+        fprintf(stderr, "Error: El tamaño de los datos de los píxeles es 0.\n");
+        return false;
+    }
+
+    // Si todas las verificaciones pasan, la imagen es válida
+    return true;
+}
+
 //Entrada: nombre del archivo a crear e informacion en estructura BMPImage del mismo
 //Salida: void
 //Descripción: guarda la estructura BMPImage en un archivo BMP que podra visualizarse en el directorio correspondiente
 void write_bmp(const char* filename, BMPImage* image) {
+    if (!isValidBMPImage(image)) {
+        fprintf(stderr, "Error: La imagen BMP no es válida. No se puede escribir en el archivo.\n");
+        return;
+    }
+
     FILE* file = fopen(filename, "wb");
     if (!file) {
         fprintf(stderr, "Error: No se pudo abrir el archivo.\n");
@@ -199,6 +235,7 @@ void write_bmp(const char* filename, BMPImage* image) {
     fwrite(&header, sizeof(BMPHeader), 1, file);
     fwrite(&info_header, sizeof(BMPInfoHeader), 1, file);
 
+    // Escribir los datos de la imagen en el archivo
     for (int y = image->height - 1; y >= 0; y--) {
         for (int x = 0; x < image->width; x++) {
             RGBPixel pixel = image->data[y * image->width + x];
