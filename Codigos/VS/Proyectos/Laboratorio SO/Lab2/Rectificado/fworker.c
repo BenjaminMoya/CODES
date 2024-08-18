@@ -209,30 +209,63 @@ void write_bmp(const char* filename, BMPImage* image) {
     fclose(file);
 }
 
-void sendImg(int pipe, BMPImage* imagen, size_t tamaño){ 
-
-    size_t enviado = 0;
-    while (enviado < tamaño) {
-        size_t tamañoFragmento = (tamaño - enviado > BUFFER_SIZE) ? BUFFER_SIZE : (tamaño - enviado);
-        ssize_t bytesEscritos = write(pipe, imagen->data + enviado, tamañoFragmento);
-        if (bytesEscritos < 0) {
+void sendImage(int write_fd, BMPImage *image) {
+    unsigned int dataSize = image->width * image->height * 3; // Asumiendo 24-bit BMP
+    unsigned int offset = 0;
+    while (offset < dataSize) {
+        unsigned int chunkSize = (dataSize - offset > BUFFER_SIZE) ? BUFFER_SIZE : (dataSize - offset);
+        if (write(write_fd, image->data + offset, chunkSize) != chunkSize) {
             perror("write");
             return;
         }
-        enviado += bytesEscritos;
+        offset += chunkSize;
+    }
+    // Enviar una señal de finalización
+    char endSignal = 0;
+    if (write(write_fd, &endSignal, sizeof(endSignal)) != sizeof(endSignal)) {
+        perror("write");
+        return;
     }
 }
 
-void receiveImg(int pipe, BMPImage* imagen, size_t tamaño){
+void receiveImage(int read_fd, BMPImage *image) {
+    unsigned int dataSize;
+    
+    // Primero, leer el tamaño de los datos de la imagen
+    // Supongamos que el tamaño de los datos se envía como un entero antes de los datos de la imagen
+    if (read(read_fd, &dataSize, sizeof(dataSize)) != sizeof(dataSize)) {
+        perror("read");
+        return;
+    }
+    
+    // Asignar memoria para los datos de la imagen
+    image->data = malloc(dataSize);
+    if (image->data == NULL) {
+        perror("malloc");
+        return;
+    }
 
-    size_t recibido = 0;
-    while (recibido < tamaño) {
-        ssize_t bytesLeidos = read(pipe, imagen->data + recibido, BUFFER_SIZE);
-        if (bytesLeidos < 0) {
+    unsigned int offset = 0;
+    while (offset < dataSize) {
+        unsigned int chunkSize = (dataSize - offset > BUFFER_SIZE) ? BUFFER_SIZE : (dataSize - offset);
+        ssize_t bytesRead = read(read_fd, image->data + offset, chunkSize);
+        if (bytesRead <= 0) {
             perror("read");
             return;
         }
-        recibido += bytesLeidos;
+        offset += bytesRead;
+    }
+
+    // Leer la señal de finalización
+    char endSignal;
+    if (read(read_fd, &endSignal, sizeof(endSignal)) != sizeof(endSignal)) {
+        perror("read");
+        return;
+    }
+    
+    if (endSignal != 0) {
+        fprintf(stderr, "Received unexpected end signal\n");
+        return;
     }
 }
 

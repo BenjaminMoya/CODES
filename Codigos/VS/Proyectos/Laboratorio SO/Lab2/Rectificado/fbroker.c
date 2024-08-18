@@ -305,21 +305,24 @@ BMPImage** send_and_receive(BMPImage** imageSplit, int num_workers, int filter_o
             write(fd[1], &imageSplit[i]->height, sizeof(int));
             write(fd[1], &imageSplit[i]->type, sizeof(int));
             pixel_data_size = imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel);
-            sendImg(fd[1], imageSplit[i], pixel_data_size);
-
+            sendImage(fd[1], imageSplit[i]);
+            close(fd[1]);
+            
             waitpid(pid, NULL, 0);
-        
+
             BMPImage *processed_image = malloc(sizeof(BMPImage));
             read(fd2[0], &processed_image->width, sizeof(int));
             read(fd2[0], &processed_image->height, sizeof(int));
             read(fd2[0], &processed_image->type, sizeof(int));
-
+            
             // Reservar memoria para los píxeles de la imagen procesada
             pixel_data_size = processed_image->width * processed_image->height * sizeof(RGBPixel);
             processed_image->data = (RGBPixel *)malloc(pixel_data_size);
 
             // Leer los píxeles de la imagen procesada
-            receiveImg(fd2[0], processed_image, pixel_data_size);
+            receiveImage(fd2[0], processed_image);
+            write(STDERR_FILENO,"Se recibio la imagen B\n",22);
+            close(fd2[0]);
 
             imageSplit[i] = processed_image;
             free_bmp(processed_image);

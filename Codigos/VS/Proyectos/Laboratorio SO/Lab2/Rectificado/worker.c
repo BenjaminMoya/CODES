@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[]) {
 
-
+    
     int filter_opt = atoi(argv[1]);
     float saturation_fact = atof(argv[2]);
     float threshold_bina = atof(argv[3]);
@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
     image_read->data = (RGBPixel *)malloc(pixel_data_size);
 
     // Leer los píxeles de la imagen
-    receiveImg(STDIN_FILENO, image_read, pixel_data_size);
+    receiveImage(STDIN_FILENO, image_read);
+    close(STDIN_FILENO);
 
     if(filter_opt == 1){
 
@@ -33,13 +34,16 @@ int main(int argc, char *argv[]) {
 
         image_read = binarization(image_read, threshold_bina);
     }
-
+    write(STDERR_FILENO,"Se aplico el filtro\n",20);
     write(STDOUT_FILENO, &image_read->width, sizeof(int));  // Enviar el ancho
     write(STDOUT_FILENO, &image_read->height, sizeof(int)); // Enviar el alto
     write(STDOUT_FILENO, &image_read->type, sizeof(int));   // Enviar el tipo
     // Enviar los píxeles de la imagen procesada
     pixel_data_size = image_read->width * image_read->height * sizeof(RGBPixel);
-    sendImg(STDOUT_FILENO, image_read, pixel_data_size);
+    sendImage(STDOUT_FILENO, image_read);
+
+    write(STDERR_FILENO,"Se envio la imagen W\n",19);
+    close(STDOUT_FILENO);
     free_bmp(image_read);
     exit(EXIT_SUCCESS);
     return 0;

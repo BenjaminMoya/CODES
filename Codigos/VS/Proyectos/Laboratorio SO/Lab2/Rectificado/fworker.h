@@ -56,6 +56,6 @@ BMPImage* saturate_bmp(BMPImage* image, float factor);
 BMPImage* grayscale(BMPImage* image);
 BMPImage* binarization(BMPImage* image, float umbral);
 void write_bmp(const char* filename, BMPImage* image);
-void sendImg(int fd, BMPImage* imagen, size_t tamaño);
-void receiveImg(int fd, BMPImage* image, size_t tamaño);
+void sendImage(int write_fd, BMPImage *image) ;
+void receiveImage(int write_fd, BMPImage *image) ;
 int has_data(int fd);
