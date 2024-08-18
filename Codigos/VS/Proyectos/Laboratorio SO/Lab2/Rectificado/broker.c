@@ -29,25 +29,44 @@ int main(int argc, char *argv[]){//no se envian bien los argumentos al broker re
         }
 
         if(num_filters == 1){ // Aplicar el filtro de saturación
-            BMPImage **imageSplit1 = split_image(image, num_workers); 
-            imageSplit1 = send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina);
-            printf("Imagenes recibidas\n");
-            BMPImage* imageRestored1 = reassemble_image(imageSplit1,num_filters);//Enviar , recibir y armar
-            char *saturatedname = strcat(img_prefix, "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
-            write_bmp(saturatedname,imageRestored1); // Escribir la imagen saturada en un archivo
-            classify(image,threshold_class);
-            write_csv(image,csv_name); // Escribir en el archivo csv
-            move_file(saturatedname,folder_name); // Mover el archivo de la imagen saturada al directorio especificado
-            free_subimages(imageSplit1,num_workers);
-            free_bmp(imageRestored1);
+;
+            if(image->height * image->width/num_workers > BUFFER_SIZE){
+
+                BMPImage** imageSplit1 = split_image(image,(int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina,1);
+                BMPImage* imageRestored1 = reassemble_image(imageSplit1,(int)ceil((image->height * image->width)/BUFFER_SIZE) + 1);
+                write_bmp("saturated.bmp",imageRestored1);
+                return 0;//Enviar , recibir y armar
+                char *saturatedname = strcat(img_prefix, "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
+                write_bmp(saturatedname,imageRestored1); // Escribir la imagen saturada en un archivo
+                classify(image,threshold_class);
+                write_csv(image,csv_name); // Escribir en el archivo csv
+                move_file(saturatedname,folder_name); // Mover el archivo de la imagen saturada al directorio especificado
+                free_subimages(imageSplit1,num_workers);
+                free_bmp(imageRestored1);
+
+            } else {
+
+                BMPImage **imageSplit1 = split_image(image, num_workers); 
+                imageSplit1 = send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina,0);
+                BMPImage* imageRestored1 = reassemble_image(imageSplit1,num_filters);//Enviar , recibir y armar
+                char *saturatedname = strcat(img_prefix, "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
+                write_bmp(saturatedname,imageRestored1); // Escribir la imagen saturada en un archivo
+                classify(image,threshold_class);
+                write_csv(image,csv_name); // Escribir en el archivo csv
+                move_file(saturatedname,folder_name); // Mover el archivo de la imagen saturada al directorio especificado
+                free_subimages(imageSplit1,num_workers);
+                free_bmp(imageRestored1);
+            }
+
         }
 
         if(num_filters == 2){ // Aplicar el filtro de escala de grises y saturacion
 
             BMPImage** imageSplit1 = split_image(image, num_workers);
             BMPImage** imageSplit2 = (BMPImage**)malloc(sizeof(BMPImage*) * num_workers);
-            imageSplit1 = send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina);
-            imageSplit2 = send_and_receive(imageSplit1,num_workers,2,saturation_fact,threshold_bina);
+            imageSplit1 = send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina,0);
+            imageSplit2 = send_and_receive(imageSplit1,num_workers,2,saturation_fact,threshold_bina,0);
             BMPImage* imageRestored1 = reassemble_image(imageSplit1,num_workers);
             BMPImage* imageRestored2= reassemble_image(imageSplit2,num_workers);//Enviar , recibir y armar
             char *saturatedname = strcat(strcpy(filename_copy, filename), "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
@@ -70,9 +89,9 @@ int main(int argc, char *argv[]){//no se envian bien los argumentos al broker re
             BMPImage** imageSplit1 = split_image(image, num_workers);
             BMPImage** imageSplit2 = (BMPImage**)malloc(sizeof(BMPImage*) * num_workers);
             BMPImage** imageSplit3 = (BMPImage**)malloc(sizeof(BMPImage*) * num_workers);
-            imageSplit1 = send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina);
-            imageSplit2 = send_and_receive(imageSplit1,num_workers,2,saturation_fact,threshold_bina);
-            imageSplit3 = send_and_receive(imageSplit1,num_workers,3,saturation_fact,threshold_bina);
+            imageSplit1 = send_and_receive(imageSplit1,num_workers,1,saturation_fact,threshold_bina,0);
+            imageSplit2 = send_and_receive(imageSplit1,num_workers,2,saturation_fact,threshold_bina,0);
+            imageSplit3 = send_and_receive(imageSplit1,num_workers,3,saturation_fact,threshold_bina,0);
             BMPImage* imageRestored1 = reassemble_image(imageSplit1,num_workers);
             BMPImage* imageRestored2= reassemble_image(imageSplit2,num_workers);
             BMPImage* imageRestored3 = reassemble_image(imageSplit3,num_workers);//Enviar , recibir y armar

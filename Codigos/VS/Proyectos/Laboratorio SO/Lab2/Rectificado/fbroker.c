@@ -254,82 +254,162 @@ BMPImage* reassemble_image(BMPImage **subimages, int num_workers) {
     return restored_image;
 }
 
-BMPImage** send_and_receive(BMPImage** imageSplit, int num_workers, int filter_opt, float saturation_fact, float threshold_bina){
+BMPImage** send_and_receive(BMPImage** imageSplit, int num_workers, int filter_opt, float saturation_fact, float threshold_bina,int multisplit) {
 
     int fd[2];  
     int fd2[2];
     pid_t pid;
     size_t pixel_data_size;
-    for (int i = 0; i < num_workers; i++){ // crear hijos
 
-        if (pipe(fd) == -1 || pipe(fd2) == -1) {
-            perror("pipe");
-            exit(EXIT_FAILURE);
-        }
-        pid = fork();
-        if(pid == -1){
-
-            exit(EXIT_FAILURE);
-
-        } else if (pid == 0){ // si es el proceso hijo
+    if(multisplit == 1){
         
-            close(fd[1]); // Cerrar escritura del pipe hijo
-            close(fd2[0]); // Cerrar lectura del pipe padre
+        for (int i = 0; i < sizeof(imageSplit); i++){ // crear hijos
 
-            // Redirigir lectura del pipe hijo a STDIN
-            if (dup2(fd[0], STDIN_FILENO) == -1) {
-                perror("dup2 stdin");
+            if (pipe(fd) == -1 || pipe(fd2) == -1) {
+                perror("pipe");
                 exit(EXIT_FAILURE);
             }
-            close(fd[0]); // Cerrar descriptor original
+            pid = fork();
+            if(pid == -1){
 
-            // Redirigir escritura del pipe padre a STDOUT
-            if (dup2(fd2[1], STDOUT_FILENO) == -1) {
-                perror("dup2 stdout");
                 exit(EXIT_FAILURE);
+
+            } else if (pid == 0){ // si es el proceso hijo
+        
+                close(fd[1]); // Cerrar escritura del pipe hijo
+                close(fd2[0]); // Cerrar lectura del pipe padre
+
+                // Redirigir lectura del pipe hijo a STDIN
+                if (dup2(fd[0], STDIN_FILENO) == -1) {
+                    perror("dup2 stdin");
+                    exit(EXIT_FAILURE);
+                }
+                close(fd[0]); // Cerrar descriptor original
+
+                // Redirigir escritura del pipe padre a STDOUT
+                if (dup2(fd2[1], STDOUT_FILENO) == -1) {
+                    perror("dup2 stdout");
+                    exit(EXIT_FAILURE);
+                }
+                close(fd2[1]); // Cerrar descriptor original
+
+                char int_str1[32],float_str2[32],float_str3[32];
+                sprintf(int_str1,"%d",filter_opt);
+                sprintf(float_str2,"%f",saturation_fact);
+                sprintf(float_str3,"%f",threshold_bina);
+                char* argv[] = {"./worker",int_str1,float_str2,float_str3,NULL};
+                execv(argv[0],argv);    
+                exit(EXIT_FAILURE);
+
+            } else { 
+
+                // Enviar la imagen al hijo
+                write(fd[1], &imageSplit[i]->width, sizeof(int));
+                write(fd[1], &imageSplit[i]->height, sizeof(int));
+                write(fd[1], &imageSplit[i]->type, sizeof(int));
+                pixel_data_size = imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel);
+                write(fd[1], imageSplit[i]->data, pixel_data_size);
+                write(STDERR_FILENO,"Broker: Imagen enviada\n",22);
+                close(fd[1]);
+                
+                BMPImage *processed_image = (BMPImage*)malloc(sizeof(BMPImage));
+                read(fd2[0], &processed_image->width, sizeof(int));
+                read(fd2[0], &processed_image->height, sizeof(int));
+                read(fd2[0], &processed_image->type, sizeof(int));
+                // Reservar memoria para los píxeles de la imagen procesada
+                pixel_data_size = processed_image->width * processed_image->height * sizeof(RGBPixel);
+                processed_image->data = (RGBPixel *)malloc(pixel_data_size);
+
+                // Leer los píxeles de la imagen procesada
+                read(fd2[0], processed_image->data, pixel_data_size);
+                close(fd2[0]);
+
+                write_bmp("procesada.bmp", processed_image);
+                imageSplit[i] = processed_image;
+                free_bmp(processed_image);
             }
-            close(fd2[1]); // Cerrar descriptor original
 
-            char int_str1[32],float_str2[32],float_str3[32];
-            sprintf(int_str1,"%d",filter_opt);
-            sprintf(float_str2,"%f",saturation_fact);
-            sprintf(float_str3,"%f",threshold_bina);
-            char* argv[] = {"./worker",int_str1,float_str2,float_str3,NULL};
-            execv(argv[0],argv);    
-            exit(EXIT_FAILURE);
-
-        } else { 
-
-            // Enviar la imagen al hijo
-            write(fd[1], &imageSplit[i]->width, sizeof(int));
-            write(fd[1], &imageSplit[i]->height, sizeof(int));
-            write(fd[1], &imageSplit[i]->type, sizeof(int));
-            pixel_data_size = imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel);
-            sendImage(fd[1], imageSplit[i]);
-            close(fd[1]);
-            
-            waitpid(pid, NULL, 0);
-
-            BMPImage *processed_image = malloc(sizeof(BMPImage));
-            read(fd2[0], &processed_image->width, sizeof(int));
-            read(fd2[0], &processed_image->height, sizeof(int));
-            read(fd2[0], &processed_image->type, sizeof(int));
-            
-            // Reservar memoria para los píxeles de la imagen procesada
-            pixel_data_size = processed_image->width * processed_image->height * sizeof(RGBPixel);
-            processed_image->data = (RGBPixel *)malloc(pixel_data_size);
-
-            // Leer los píxeles de la imagen procesada
-            receiveImage(fd2[0], processed_image);
-            write(STDERR_FILENO,"Se recibio la imagen B\n",22);
-            close(fd2[0]);
-
-            imageSplit[i] = processed_image;
-            free_bmp(processed_image);
         }
 
-    }
+        return imageSplit;
+
+    } else {
+
+        for (int i = 0; i < num_workers; i++){ // crear hijos
+
+            if (pipe(fd) == -1 || pipe(fd2) == -1) {
+                perror("pipe");
+                exit(EXIT_FAILURE);
+            }
+            pid = fork();
+            if(pid == -1){
+
+                exit(EXIT_FAILURE);
+
+            } else if (pid == 0){ // si es el proceso hijo
+        
+                close(fd[1]); // Cerrar escritura del pipe hijo
+                close(fd2[0]); // Cerrar lectura del pipe padre
+
+                // Redirigir lectura del pipe hijo a STDIN
+                if (dup2(fd[0], STDIN_FILENO) == -1) {
+                    perror("dup2 stdin");
+                    exit(EXIT_FAILURE);
+                }
+                close(fd[0]); // Cerrar descriptor original
+
+                // Redirigir escritura del pipe padre a STDOUT
+                if (dup2(fd2[1], STDOUT_FILENO) == -1) {
+                    perror("dup2 stdout");
+                    exit(EXIT_FAILURE);
+                }
+                close(fd2[1]); // Cerrar descriptor original
+
+                char int_str1[32],float_str2[32],float_str3[32];
+                sprintf(int_str1,"%d",filter_opt);
+                sprintf(float_str2,"%f",saturation_fact);
+                sprintf(float_str3,"%f",threshold_bina);
+                char* argv[] = {"./worker",int_str1,float_str2,float_str3,NULL};
+                execv(argv[0],argv);    
+                exit(EXIT_FAILURE);
+
+            } else { 
+
+                // Enviar la imagen al hijo
+                write(fd[1], &imageSplit[i]->width, sizeof(int));
+                write(fd[1], &imageSplit[i]->height, sizeof(int));
+                write(fd[1], &imageSplit[i]->type, sizeof(int));
+                pixel_data_size = imageSplit[i]->width * imageSplit[i]->height * sizeof(RGBPixel);
+                write(fd[1], imageSplit[i]->data, pixel_data_size);
+                write(STDERR_FILENO,"Broker: Imagen enviada\n",22);
+                close(fd[1]);
+
+                BMPImage *processed_image = (BMPImage*)malloc(sizeof(BMPImage));
+                processed_image->name = imageSplit[i]->name;
+                processed_image->width = imageSplit[i]->width;
+                processed_image->height = imageSplit[i]->height;
+                processed_image->type = imageSplit[i]->type;
+                // Reservar memoria para los píxeles de la imagen procesada
+                processed_image->data = (RGBPixel *)malloc(pixel_data_size);
+
+                // Leer los píxeles de la imagen procesada
+                read(fd2[0], processed_image->data, pixel_data_size);
+
+                close(fd2[0]);
+
+                char int_str1[32];
+                sprintf(int_str1,"%d",i);
+                char *saturatedname = strcat(int_str1, "_saturated.bmp"); // Crear el nombre del archivo de la imagen saturada
+                write_bmp(saturatedname, processed_image);
+                imageSplit[i] = processed_image;
+                free_bmp(processed_image);
+            }
+
+        }
+
+        return imageSplit;
+        
+    } 
 
     return imageSplit;
-        
-} 
+}

@@ -9,6 +9,7 @@
 #include <bits/getopt_core.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <math.h>
 #include <sys/select.h>
 #define BUFFER_SIZE 65536
 #pragma pack(push, 1)
@@ -56,6 +57,3 @@ BMPImage* saturate_bmp(BMPImage* image, float factor);
 BMPImage* grayscale(BMPImage* image);
 BMPImage* binarization(BMPImage* image, float umbral);
 void write_bmp(const char* filename, BMPImage* image);
-void sendImage(int write_fd, BMPImage *image) ;
-void receiveImage(int write_fd, BMPImage *image) ;
-int has_data(int fd);

@@ -14,12 +14,13 @@ int main(int argc, char *argv[]) {
 
     // Reservar memoria para los píxeles
     size_t pixel_data_size = image_read->width * image_read->height * sizeof(RGBPixel);
-    image_read->data = (RGBPixel *)malloc(pixel_data_size);
+    image_read->data = (RGBPixel*)malloc(pixel_data_size);
 
     // Leer los píxeles de la imagen
-    receiveImage(STDIN_FILENO, image_read);
-    close(STDIN_FILENO);
+    read(STDIN_FILENO, image_read->data, pixel_data_size);
+    close(STDIN_FILENO);    
 
+    write_bmp("R.bmp", image_read);
     if(filter_opt == 1){
 
         image_read = saturate_bmp(image_read, saturation_fact);
@@ -34,16 +35,13 @@ int main(int argc, char *argv[]) {
 
         image_read = binarization(image_read, threshold_bina);
     }
-    write(STDERR_FILENO,"Se aplico el filtro\n",20);
-    write(STDOUT_FILENO, &image_read->width, sizeof(int));  // Enviar el ancho
-    write(STDOUT_FILENO, &image_read->height, sizeof(int)); // Enviar el alto
-    write(STDOUT_FILENO, &image_read->type, sizeof(int));   // Enviar el tipo
+    write_bmp("W.bmp", image_read);
+    write(STDERR_FILENO,"Worker: Imagen procesada\n",26);
     // Enviar los píxeles de la imagen procesada
     pixel_data_size = image_read->width * image_read->height * sizeof(RGBPixel);
-    sendImage(STDOUT_FILENO, image_read);
-
-    write(STDERR_FILENO,"Se envio la imagen W\n",19);
+    write(STDOUT_FILENO, image_read->data, pixel_data_size);
     close(STDOUT_FILENO);
+
     free_bmp(image_read);
     exit(EXIT_SUCCESS);
     return 0;
