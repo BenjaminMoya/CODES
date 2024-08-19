@@ -1,0 +1,1 @@
+Luego de hacer muchas pruebas y manejadores de errores no se pudo encontrar porque si la cantidad de workers era menor a 7 el programa no respondia, pero se implemento de igual manera la logica necesaria para el caso y se asegura una buena ejecucion con 15 workers 
