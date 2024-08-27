@@ -108,17 +108,17 @@ int main(int argc, char *argv[]) {
         printf("No se ingreso el nombre del directorio");
         return 1;
     }
-   
-    csv_name= strcat(csv_name,".csv"); // Agregar la extensión .csv al nombre del archivo csv
-    int i = 0;
-    new_folder(folder_name); // Crear el directorio donde se guardarán las imágenes
-    new_csv(csv_name); // Crear el archivo csv
+
     char** filenames_arr = file_names(img_prefix); // Obtener los nombres de los archivos con el prefijo especificado
     
     if (filenames_arr == NULL || *filenames_arr == NULL) {
         printf("Error: No se encontraron archivos con el prefijo especificado.\n");
         return 1;
     }
+   
+    csv_name= strcat(csv_name,".csv"); // Agregar la extensión .csv al nombre del archivo csv
+    new_folder(folder_name); // Crear el directorio donde se guardarán las imágenes
+    new_csv(csv_name); // Crear el archivo csv
     
     while(*filenames_arr != NULL){
         

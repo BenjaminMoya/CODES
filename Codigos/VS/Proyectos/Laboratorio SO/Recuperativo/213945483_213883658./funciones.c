@@ -461,7 +461,6 @@ char** file_names(const char *img_prefix){
     closedir(dir);
 
     // Redimensionar el arreglo de nombres de archivo al número real de nombres de archivo encontrados
-    file_names = (char **)realloc(file_names, count * sizeof(char *));
     if (file_names == NULL && count > 0) {
         printf("Error de memoria\n");
         for (int i = 0; i < count; ++i) {
@@ -469,7 +468,11 @@ char** file_names(const char *img_prefix){
         }
         free(file_names);
         return NULL;
+    } else if (count != 0){
+
+        file_names = (char **)realloc(file_names, count * sizeof(char *));
     }
+
     file_names[count] = NULL; // Marcar el final del arreglo de nombres de archivo
     return file_names;
 }
