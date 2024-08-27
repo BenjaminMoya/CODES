@@ -1,16 +1,12 @@
-all: lab1.o funciones.o lab1
+all: funciones.o lab1
 
 funciones.o: funciones.c funciones.h
 		gcc -g -c funciones.c 
 
-lab1.o: lab1.c funciones.h
-		gcc -g -c lab1.c 
-
-lab1: funciones.o lab1.o
-		gcc -g -o lab1 funciones.o lab1.o
-
+lab1: funciones.o lab1.c
+		gcc -g funciones.o lab1.c -o lab1
 clean:
-		rm -f lab1 funciones.o lab1.o
+		rm -f funciones.o lab1 
 
 #Posibles comandos por consola luego de compilar
 #./lab1 -N ejemplo -C directorio -R tabla

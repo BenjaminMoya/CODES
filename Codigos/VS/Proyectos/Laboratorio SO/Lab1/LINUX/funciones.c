@@ -146,27 +146,46 @@ BMPImage* grayscale(BMPImage* image) {
 //Entrada: imagen BMP y un umbral 
 //Salida: imagen BMP binarizada
 //Descripción: convierte la imagen a escala de grises y luego binariza la imagen segun un umbral
-BMPImage* binarization(BMPImage* image, float umbral) {
-    BMPImage* new_image = (BMPImage*)malloc(sizeof(BMPImage));
-    new_image->width = image->width;
-    new_image->height = image->height;
-    new_image->data = (RGBPixel*)malloc(sizeof(RGBPixel) * image->width * image->height);
+BMPImage* binarization(BMPImage *img, float threshold) {
+    if (threshold < 0 || threshold > 1) {
+        fprintf(stderr, "Threshold must be between 0 and 1.\n");
+        return NULL;
+    }
 
-    for (int y = 0; y < image->height; y++) {
-        for (int x = 0; x < image->width; x++) {
-            RGBPixel pixel = image->data[y * image->width + x];
-            RGBPixel new_pixel = pixel; // Copia del valor del píxel
-            unsigned char gray = (unsigned char)(0.3 * pixel.r + 0.59 * pixel.g + 0.11 * pixel.b);
+    BMPImage *binarizedImg = (BMPImage *)malloc(sizeof(BMPImage));
+    if (binarizedImg == NULL) {
+        perror("Failed to allocate memory for binarized image");
+        return NULL;
+    }
 
-            new_pixel.r = (gray < umbral) ? 0 : 255;
-            new_pixel.g = (gray < umbral) ? 0 : 255;
-            new_pixel.b = (gray < umbral) ? 0 : 255;
+    binarizedImg->width = img->width;
+    binarizedImg->height = img->height;
+    binarizedImg->data = (RGBPixel *)malloc(img->width * img->height * sizeof(RGBPixel));
+    if (binarizedImg->data == NULL) {
+        perror("Failed to allocate memory for pixel data");
+        free(binarizedImg);
+        return NULL;
+    }
 
-            new_image->data[y * image->width + x] = new_pixel;
+    size_t numPixels = img->width * img->height;
+    for (size_t i = 0; i < numPixels; ++i) {
+        RGBPixel *srcPixel = &img->data[i];
+        RGBPixel *dstPixel = &binarizedImg->data[i];
+
+        // Calculate the luminance of the pixel (average of red, green, and blue values)
+        float luminance = (srcPixel->r + srcPixel->g + srcPixel->b) / 3.0f;
+        // Normalize luminance to the range [0, 1]
+        luminance /= 255.0f;
+
+        // Apply the threshold
+        if (luminance > threshold) {
+            dstPixel->r = dstPixel->g = dstPixel->b = 255;  // White
+        } else {
+            dstPixel->r = dstPixel->g = dstPixel->b = 0;    // Black
         }
     }
-    
-    return new_image;
+
+    return binarizedImg;
 }
 //Entrada: imagen BMP
 //Salida: porcentaje de pixeles negros
@@ -262,7 +281,7 @@ void new_folder(const char *foldername) {
 void move_file(const char *filename, const char *foldername) {
     // Comando para mover el archivo
     char comand[500];
-    sprintf(comand, "mv %s %s/", filename, foldername);
+    sprintf(comand, "move %s %s/", filename, foldername);
     system(comand);
 }
 //Entrada: nombre del archivo csv
@@ -284,6 +303,7 @@ void new_csv(const char *filename){
 
 
 }
+
 //Entrada: imagen BMP y nombre del archivo csv
 //Salida: void
 //Descripción: guarda el nombre de la imagen y su clasificación en un archivo csv
@@ -293,19 +313,28 @@ void write_csv(BMPImage *image, const char *csvname) {
     file = fopen(csvname, "a");
 
     if (file == NULL) {
-        printf("Error al abrir el csv\n");
+        printf("Error al abrir el csv");
         return;
     }
 
-    const char *name = image->name;
-    int type = image->type;
-    char typestr[20]; // Suponiendo que el número entero convertido puede tener hasta 20 caracteres
-    sprintf(typestr, "%d", type);
-    char buffer[100]; // Asegúrate de tener suficiente espacio para contener las cadenas concatenadas
-    snprintf(buffer, sizeof(buffer), "%s-%s\n", name, typestr);
+    if (image == NULL) {
+        printf("Error: el puntero image es NULL.\n");
+        return;  // O maneja el error según corresponda
+    }
 
-    fprintf(file, "%s", buffer);
-    fclose(file);
+    const char *name = image->name;
+    if (name == NULL) {
+        printf("Error: el nombre de la imagen es NULL.\n");
+        name = "";  // O maneja el error según corresponda
+    }
+
+    int type = image->type;
+    char typestr[20];
+    snprintf(typestr, sizeof(typestr), "%d", type);
+
+    char buffer[200]; // Incrementa el tamaño si es necesario
+    snprintf(buffer, sizeof(buffer), "%sI%s\n", name, typestr);
+    return;
 }
 
 //Entrada: prefijo 
@@ -353,8 +382,8 @@ char** file_names(const char *prefix) {
             // Redimensionar el arreglo de nombres de archivo si es necesario
             if (count >= size) {
                 size *= 2;
-                file_names = (char **)realloc(file_names, size * sizeof(char *));
-                if (file_names == NULL) {
+                char **temp = (char **)realloc(file_names, size * sizeof(char *));
+                if (temp == NULL) {
                     printf("Error de memoria\n");
                     closedir(dir);
                     for (int i = 0; i < count; ++i) {
@@ -363,6 +392,7 @@ char** file_names(const char *prefix) {
                     free(file_names);
                     return NULL;
                 }
+                file_names = temp;
             }
         }
     }
@@ -370,15 +400,21 @@ char** file_names(const char *prefix) {
     closedir(dir);
 
     // Redimensionar el arreglo de nombres de archivo al número real de nombres de archivo encontrados
-    file_names = (char **)realloc(file_names, count * sizeof(char *));
-    if (file_names == NULL && count > 0) {
-        printf("Error de memoria\n");
-        for (int i = 0; i < count; ++i) {
-            free(file_names[i]);
+    if (count > 0) {
+        char **temp = (char **)realloc(file_names, (count + 1) * sizeof(char *));
+        if (temp == NULL) {
+            printf("Error de memoria\n");
+            for (int i = 0; i < count; ++i) {
+                free(file_names[i]);
+            }
+            free(file_names);
+            return NULL;
         }
+        file_names = temp;
+    } else {
         free(file_names);
         return NULL;
     }
-    file_names[count] = NULL; // Marcar el final del arreglo de nombres de archivo
+
     return file_names;
 }
