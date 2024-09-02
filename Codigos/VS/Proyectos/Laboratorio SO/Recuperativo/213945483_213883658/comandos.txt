@@ -1,0 +1,3 @@
+Posibles comandos por consola luego de compilar
+./lab1 -N ejem -f 2 -p 5 -C directorio -R tabla
+./lab1 -N ejem -p 2 -C directorio -u 0.9 -v 0.1 -R tabla

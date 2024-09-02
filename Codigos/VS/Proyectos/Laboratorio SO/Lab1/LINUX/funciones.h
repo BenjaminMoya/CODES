@@ -5,8 +5,6 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <stdbool.h>
-#include <ctype.h>
 #include <bits/getopt_core.h>
 
 #pragma pack(push, 1)
@@ -54,7 +52,7 @@ BMPImage* read_bmp(const char* filename);
 void free_bmp(BMPImage* image);
 BMPImage* saturate_bmp(BMPImage* image, float factor);
 BMPImage* grayscale(BMPImage* image);
-BMPImage* binarization(BMPImage *img, float threshold);
+BMPImage* binarization(BMPImage* image, float umbral);
 float black_percentage(BMPImage* image);
 BMPImage* classify(BMPImage* image, float umbral);
 void write_bmp(const char* filename, BMPImage* image);
@@ -63,7 +61,6 @@ void write_bmp(const char* filename, BMPImage* image);
 void new_folder(const char *foldername);
 void move_file(const char *filename, const char *foldername);
 void new_csv(const char *filename);
-bool is_special(const char *name);
 void write_csv(BMPImage *image,const char *csvname);
 
 //Funcion extra para conseguir la lista de los archivos en directorio con cierto prefijo
