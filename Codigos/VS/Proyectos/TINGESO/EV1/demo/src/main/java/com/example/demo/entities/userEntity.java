@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name="users")
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,10 +20,12 @@ public class userEntity {
     private String userName;
     private String userRut;
     private String userEmail;
+    private String userPassword;
     private int userAge;
-    private long userAccountId;
+    private int userAccountSeniority;
     private int userWorkSeniority;
+    private int userSavingCapacity;
+    private double userBalance;
     private boolean userIndependent;
-    //
-
+    private boolean executive;
 }

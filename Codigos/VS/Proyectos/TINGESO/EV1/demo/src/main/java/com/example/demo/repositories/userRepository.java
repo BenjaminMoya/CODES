@@ -6,10 +6,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface userRepository extends JpaRepository<userRepository,Long> {
+public interface userRepository extends JpaRepository<userEntity,Long> {
 
-    public userRepository findByRut(long id);
-
-    @Query(value = "SELECT * FROM user WHERE user.rut = :rut",nativeQuery = true)
-    userEntity findByRutNativeQuery(@Param("rut") String rut);
+    userEntity findByUserRut(String userRut);
+    userEntity findByUserName(String userName);
+    userEntity findByUserId(long userId);
+    userEntity findByUserEmail(String userEmail);
 }
