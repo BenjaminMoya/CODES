@@ -15,31 +15,31 @@ public class userController {
     @Autowired
     userService UserService;
 
-    @GetMapping("/getUsers")
+    @GetMapping("/get")
     public ResponseEntity<ArrayList<userEntity>> listUsers(){
         ArrayList<userEntity> users = UserService.getUsers();
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("getUserById/{userId}")
+    @GetMapping("/getById/{userId}")
     public ResponseEntity<userEntity> getUserById(@PathVariable Long userId) {
         userEntity user = UserService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("getUserByRut/{userRut}")
+    @GetMapping("/getByRut/{userRut}")
     public ResponseEntity<userEntity> getUserByRut(@PathVariable String userRut){
         userEntity user = UserService.getUserByRut(userRut);
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("getUserByEmail/{userEmail}")
+    @GetMapping("/getByEmail/{userEmail}")
     public ResponseEntity<userEntity> getUserByEmail(@PathVariable String userEmail){
         userEntity user = UserService.getUserByEmail(userEmail);
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping("/saveUser")
+    @PostMapping("/save")
     public ResponseEntity<userEntity> saveUser(@RequestBody userEntity user) {
         userEntity newUser = UserService.saveUser(user);
         return ResponseEntity.ok(newUser);
@@ -50,13 +50,13 @@ public class userController {
         return UserService.login(user.getUserEmail(),user.getUserPassword());
     }
 
-    @PutMapping("/updateUser")
+    @PutMapping("/update")
     public ResponseEntity<userEntity> updateUser(@RequestBody userEntity user){
         userEntity userUpdated = UserService.updateUser(user);
         return ResponseEntity.ok(userUpdated);
     }
 
-    @DeleteMapping("deleteUserById/{userId}")
+    @DeleteMapping("/delete/{userId}")
     public ResponseEntity<Boolean> deleteUserById(@PathVariable Long userId) throws Exception {
         var isDeleted = UserService.deleteUser(userId);
         return ResponseEntity.ok(isDeleted);

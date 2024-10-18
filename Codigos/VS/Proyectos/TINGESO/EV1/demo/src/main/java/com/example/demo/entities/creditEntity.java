@@ -21,7 +21,7 @@ public class creditEntity {
     private long creditId;
 
     private long creditUserId;
-    private long creditRequestedAmount;
+    private double creditRequestedAmount;
     private int creditPhase;
     private Date creditFinishDate;
 
@@ -29,14 +29,4 @@ public class creditEntity {
     private int creditType;
     private boolean latePayment;
     private double maxAmount;
-
-    private int cI;
-    private int cA;
-    private int hC;
-    private int ePV;
-    private int eFN;
-    private int pDN;
-    private int pR;
-    private int cAA;
-
 }

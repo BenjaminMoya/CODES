@@ -1,11 +1,18 @@
 package com.example.demo.servicies;
 
 import com.example.demo.entities.creditEntity;
-import com.example.demo.entities.userEntity;
 import com.example.demo.repositories.creditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 
@@ -29,10 +36,10 @@ public class creditService {
         }
     }
 
-    public List<creditEntity> getUserExpiredDebts(userEntity user){
+    public List<creditEntity> getUserExpiredDebts(long userId){
 
         Date current = new Date();
-        List<creditEntity> userDebt = CreditRepository.findByCreditUserId(user.getUserId());
+        List<creditEntity> userDebt = CreditRepository.findByCreditUserId(userId);
         userDebt.removeIf(credit -> credit.getCreditFinishDate().before(current));
         return userDebt;
 
@@ -86,12 +93,12 @@ public class creditService {
         }
     }
 
-    public double finalMonthlyAmount(long requestedAmount,double interest,int years){
+    public double finalMonthlyAmount(double requestedAmount,double interest,int years){
 
         double desgravamen = requestedAmount * 0.0003;
         double administration = requestedAmount * 0.01;
         double monthlyAmount = creditAmountSimulation(requestedAmount,interest,years);
-        return (monthlyAmount + administration + desgravamen) * 12;
+        return monthlyAmount + administration + desgravamen;
     }
 
     public double finalCreditAmount(double monthlyAmount,int years){
@@ -99,5 +106,4 @@ public class creditService {
         int months = years * 12;
         return monthlyAmount*months;
     }
-
 }

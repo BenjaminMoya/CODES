@@ -18,20 +18,74 @@ public class creditController {
     @Autowired
     creditService CreditService;
 
-    @GetMapping("/userCredits/{userId}")
+    @GetMapping("/credits/{userId}")
     public ResponseEntity<ArrayList<creditEntity>> getUserCredits(@PathVariable long userId){
         List<creditEntity> credits = CreditService.getUserCredits(userId);
         return ResponseEntity.ok((ArrayList<creditEntity>) credits);
     }
 
-    @GetMapping("/userExpireDebts")
-    public ResponseEntity<ArrayList<creditEntity>> getUserExpiredDebts(@RequestBody userEntity user){
-        return ResponseEntity.ok((ArrayList<creditEntity>) CreditService.getUserExpiredDebts(user));
+    @PostMapping("/save")
+    public int saveCredit(@RequestBody creditEntity credit){
+        try{
+            CreditService.saveCredit(credit);
+            return 1;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
-    @GetMapping("/creditAmountSimulation")
-    public double creditAmountSimulation(@PathVariable double requestedAmount,@PathVariable double interest,@PathVariable int years){
+    @GetMapping("/expired/{userId}")
+    public ResponseEntity<ArrayList<creditEntity>> getUserExpiredDebts(@PathVariable long userId){
+        return ResponseEntity.ok((ArrayList<creditEntity>) CreditService.getUserExpiredDebts(userId));
+    }
+
+    @PostMapping("/update")
+    public int updateCredit(@RequestBody creditEntity credit){
+        try{
+            CreditService.updateCredit(credit);
+            return 1;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @GetMapping("/simulation")
+    public double creditAmountSimulation(@RequestParam("amount") double requestedAmount,
+                                         @RequestParam("interest") double interest,
+                                         @RequestParam("years") int years){
         return CreditService.creditAmountSimulation(requestedAmount,interest,years);
+    }
+
+    @GetMapping("/relation1")
+    public int relationCI(@RequestParam("amount") double monthlyAmount,
+                          @RequestParam("entry") double monthlyEntry){
+        return CreditService.relationCI(monthlyAmount,monthlyEntry);
+    }
+
+    @GetMapping("/relation2")
+    public int relationDI(@RequestParam("amount") double monthlyAmount,
+                          @RequestParam("debts") double debtsMonthlyAmount,
+                          @RequestParam("monthly") double creditMonthlyAmount){
+        return CreditService.relationDI(monthlyAmount,debtsMonthlyAmount,creditMonthlyAmount);
+    }
+
+    @GetMapping("/max")
+    public double maxFinancing(@RequestParam("type") int creditType,
+                               @RequestParam("amount") double propertyAmount){
+        return CreditService.maxFinancing(creditType,propertyAmount);
+    }
+
+    @GetMapping("/monthly")
+    public double finalMonthlyAmount(@RequestParam("amount") double requestedAmount,
+                                     @RequestParam("interest") double interest,
+                                     @RequestParam("years") int years){
+        return CreditService.finalMonthlyAmount(requestedAmount,interest,years);
+    }
+
+    @GetMapping("/final")
+    public double finalCreditAmount(@RequestParam("amount") double monthlyAmount,
+                                    @RequestParam("years") int years){
+        return CreditService.finalCreditAmount(monthlyAmount,years);
     }
 
 }
