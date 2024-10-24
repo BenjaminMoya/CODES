@@ -32,4 +32,8 @@ const remove = (id) => {
     return httpCommon.delete(`/api/user/delete/${id}`);
 }
 
-export default { getAll, getById, getByRut, getByEmail, create, login, update, remove };
+const zero = (id) => {
+    return httpCommon.post(`/api/user/zero/${id}`);
+}
+
+export default { getAll, getById, getByRut, getByEmail, create, login, update, remove, zero };

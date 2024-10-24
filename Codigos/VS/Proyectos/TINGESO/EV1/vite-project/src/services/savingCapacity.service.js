@@ -1,23 +1,23 @@
 import httpCommon from "../http-common";
 
-const min = (id,amount) => {
-    return httpCommon.post(`api/saving/min/${id}`,{params:{amount}});
+const min = (id, amount) => {
+    return httpCommon.post("api/saving/min", { id, amount });
+};
+
+const history = (id,great) => {
+    return httpCommon.post("api/saving/history",{ id, great });
 }
 
-const history = (id,balance,max) => {
-    return httpCommon.get(`api/saving/history/${id}`,{params:{balance,max}});
-}
-
-const periodic = (id,deposit,entry,isPeriodic) => {
-    return httpCommon.post(`api/saving/periodic/${id}`,{params:{deposit,entry,isPeriodic}});
+const periodic = (id,deposit,entry,periodic) => {
+    return httpCommon.post("api/saving/periodic",{ id, deposit, entry, periodic});
 }
 
 const relation = (id,amount) => {
-    return httpCommon.post(`api/saving/relation/${id}`,{params:{amount}});
+    return httpCommon.post("api/saving/relation",{ id, amount});
 }
 
-const out = (id,monthly,balance) => {
-    return httpCommon.post(`api/saving/out/${id}`,{params:{monthly,balance}});
+const out = (id,max) => {
+    return httpCommon.post("api/saving/out",{ id, max});
 }
 
 export default { min, history, periodic, relation, out };

@@ -15,9 +15,9 @@ public class fileEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true,nullable = false)
-    private long creditId;
+    private long fileId;
 
-    private long fileUserId;
+    private long fileCreditId;
     private String fileName;
     private String filePath;
 

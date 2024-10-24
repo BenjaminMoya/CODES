@@ -28,17 +28,17 @@ public class userService {
         return UserRepository.save(newUser);
     }
 
-    public int login (String userEmail, String userPassword){
+    public userEntity login (String userEmail, String userPassword){
 
         userEntity userTemp = getUserByEmail(userEmail);
         if(userTemp != null){
 
             if(userPassword.equals(userTemp.getUserPassword())){
 
-                return 1;
+                return userTemp;
             }
         }
-        return 0;
+        return null;
     }
 
     public userEntity getUserById(Long userId){
@@ -63,6 +63,17 @@ public class userService {
             return true;
         } catch (Exception e) {
             throw new Exception(e.getMessage());
+        }
+    }
+
+    public int zeroSaving(Long userId){
+        userEntity userTemp = UserRepository.findByUserId(userId);
+        userTemp.setUserSavingCapacity(0);
+        try{
+            updateUser(userTemp);
+            return 1;
+        } catch (Exception e) {
+            return 0;
         }
     }
 

@@ -21,9 +21,11 @@ public class creditEntity {
     private long creditId;
 
     private long creditUserId;
+    private double creditPropertyAmount;
     private double creditRequestedAmount;
     private int creditPhase;
-    private Date creditFinishDate;
+    private int creditTerm;
+    private Date creditInitDate;
 
     // Primera = 1, Segunda = 2, Comercial = 3, Remodelacion = 4
     private int creditType;

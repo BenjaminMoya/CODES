@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/saving")
@@ -14,37 +15,40 @@ public class savingCapacityController {
     @Autowired
     savingCapacityService SavingCapacityService;
 
-    @PostMapping("/min/{userId}")
-    public int minAmount(@PathVariable long userId,
-                         @RequestParam("amount") double creditAmount){
-        return SavingCapacityService.minAmount(userId,creditAmount);
+    @PostMapping("/min")
+    public int minAmount(@RequestBody Map<String, Object> body) {
+        long userId = Long.parseLong(body.get("id").toString());
+        double creditAmount = Double.parseDouble(body.get("amount").toString());
+        return SavingCapacityService.minAmount(userId, creditAmount);
     }
 
-    @PostMapping("/history/{userId}")
-    public int savingHistory(@PathVariable long userId,
-                             @RequestParam("balance") ArrayList<Double> monthlyBalance,
-                             @RequestParam("max") ArrayList<Double> monthlyMaxOut){
-        return SavingCapacityService.savingHistory(userId,monthlyBalance,monthlyMaxOut);
+    @PostMapping("/history")
+    public int savingHistory(@RequestBody Map<String, Object> body){
+        long userId = Long.parseLong(body.get("id").toString());
+        boolean greatRetirement = Boolean.parseBoolean(body.get("great").toString());
+        return SavingCapacityService.savingHistory(userId,greatRetirement);
     }
 
-    @PostMapping("/periodic/{userId}")
-    public int periodicDeposit(@PathVariable long userId,
-                              @RequestParam("deposit") ArrayList<Double> userDeposit,
-                              @RequestParam("entry") double monthlyEntry,
-                              @RequestParam("isPeriodic") boolean isPeriodic){
-        return SavingCapacityService.periodicDeposit(userId,userDeposit,monthlyEntry,isPeriodic);
+    @PostMapping("/periodic")
+    public int periodicDeposit(@RequestBody Map<String, Object> body) {
+        long userId = Long.parseLong(body.get("id").toString());
+        double monthlyDeposit = Double.parseDouble(body.get("deposit").toString());
+        double monthlyEntry = Double.parseDouble(body.get("entry").toString());
+        boolean isPeriodic = Boolean.parseBoolean(body.get("periodic").toString());
+        return SavingCapacityService.periodicDeposit(userId,monthlyDeposit,monthlyEntry,isPeriodic);
     }
 
-    @PostMapping("/relation/{userId}")
-    public int relationSA(@PathVariable long userId,
-                          @RequestParam("amount") double creditAmount){
+    @PostMapping("/relation")
+    public int relationSA(@RequestBody Map<String, Object> body){
+        long userId = Long.parseLong(body.get("id").toString());
+        double creditAmount = Double.parseDouble(body.get("amount").toString());
         return SavingCapacityService.relationSA(userId,creditAmount);
     }
 
-    @PostMapping("/out/{userId}")
-    public int recentOut(@PathVariable long userId,
-                         @RequestParam("monthly") ArrayList<Double> userMaxMonthlyOut,
-                         @RequestParam("balance") ArrayList<Double> monthlyBalance){
-        return SavingCapacityService.recentOut(userId,userMaxMonthlyOut,monthlyBalance);
+    @PostMapping("/out")
+    public int recentOut(@RequestBody Map<String, Object> body) {
+        long userId = Long.parseLong(body.get("id").toString());
+        double maxRetirement = Double.parseDouble(body.get("max").toString());
+        return SavingCapacityService.recentOut(userId,maxRetirement);
     }
 }

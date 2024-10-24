@@ -29,8 +29,8 @@ public class fileController {
     @Autowired
     fileRepository FileRepository;
 
-    @PostMapping("/upload/{userId}")
-    public ResponseEntity<String> uploadFile(@PathVariable long userId,
+    @PostMapping("/upload/{creditId}")
+    public ResponseEntity<String> uploadFile(@PathVariable long creditId,
                                              @RequestParam int type,
                                              @RequestParam("file")MultipartFile file){
         try{
@@ -39,7 +39,7 @@ public class fileController {
             fileEntity newFile = new fileEntity();
             newFile.setFileName(file.getOriginalFilename());
             newFile.setFilePath(filePath);
-            newFile.setFileUserId(userId);
+            newFile.setFileCreditId(creditId);
             newFile.setType(type);
             FileService.saveFile(newFile);
 
@@ -49,11 +49,11 @@ public class fileController {
         }
     }
 
-    @GetMapping("/download/{userId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable long userId,
+    @GetMapping("/download/{creditId}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable long creditId,
                                                  @RequestParam("type") int type){
         try{
-            Optional<fileEntity> optionalFile = FileRepository.findByFileUserIdAndType(userId,type);
+            Optional<fileEntity> optionalFile = FileRepository.findByFileCreditIdAndType(creditId,type);
 
             if(optionalFile.isEmpty()){
                 return ResponseEntity.notFound().build();

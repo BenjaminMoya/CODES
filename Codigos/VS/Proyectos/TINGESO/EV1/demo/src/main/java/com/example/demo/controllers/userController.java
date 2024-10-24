@@ -46,8 +46,13 @@ public class userController {
     }
 
     @PostMapping("/login")
-    public int login(@RequestBody userEntity user){
-        return UserService.login(user.getUserEmail(),user.getUserPassword());
+    public ResponseEntity<userEntity> login(@RequestBody userEntity user){
+        return ResponseEntity.ok(UserService.login(user.getUserEmail(),user.getUserPassword()));
+    }
+
+    @PostMapping("/zero/{userId}")
+    public int zeroSaving(@PathVariable long userId){
+        return UserService.zeroSaving(userId);
     }
 
     @PutMapping("/update")

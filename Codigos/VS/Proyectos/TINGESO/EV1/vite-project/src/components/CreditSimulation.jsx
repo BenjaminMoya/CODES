@@ -5,30 +5,31 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
-import MenuItem from "@mui/material/MenuItem";
 import creditService from "../services/credit.service";
 
 const CreditSimulation = () => {
   const [amount, setAmount] = useState("");
   const [interest, setInterest] = useState("");
   const [year, setYear] = useState("");
+  const [simulatedAmount, setSimulatedAmount] = useState("");
 
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   const calculateSimulation = (e) => {
     e.preventDefault();
     console.log("Solicitar calcular simulacion.", amount,"-",interest,"-",year);
     creditService
-      .simulation(amount, interest, year)
-      .then((response) => {
-        console.log("Cuota mensual simulada: ", response.data);
-      })
-      .catch((error) => {
-        console.log(
-          "Ha ocurrido un error al intentar calcular la simulacion del credito.",
-          error
-        );
-      });
+    .simulation(amount, interest, year)
+    .then((response) => {
+      console.log("Cuota mensual simulada: ", response.data);
+      setSimulatedAmount(response.data);
+    })
+    .catch((error) => {
+      console.log(
+        "Ha ocurrido un error al intentar calcular la simulacion del credito.",
+        error
+      );
+    });
     console.log("Fin calculo de la simulacion.");
   };
 
@@ -77,34 +78,6 @@ const CreditSimulation = () => {
           />
         </FormControl>
 
-      {/*
-        <FormControl fullWidth>
-          <TextField
-            id="month"
-            label="Month"
-            value={month}
-            select
-            variant="standard"
-            defaultValue="1"
-            onChange={(e) => setMonth(e.target.value)}
-            style={{ width: "25%" }}
-          >
-            <MenuItem value={1}>Enero</MenuItem>
-            <MenuItem value={2}>Febrero</MenuItem>
-            <MenuItem value={3}>Marzo</MenuItem>
-            <MenuItem value={4}>Abril</MenuItem>
-            <MenuItem value={5}>Mayo</MenuItem>
-            <MenuItem value={6}>Junio</MenuItem>
-            <MenuItem value={7}>Julio</MenuItem>
-            <MenuItem value={8}>Agosto</MenuItem>
-            <MenuItem value={9}>Septiembre</MenuItem>
-            <MenuItem value={10}>Octubre</MenuItem>
-            <MenuItem value={11}>Noviembre</MenuItem>
-            <MenuItem value={12}>Diciembre</MenuItem>
-          </TextField>
-        </FormControl>
-      */}
-
         <FormControl>
           <br />
           <Button
@@ -118,6 +91,7 @@ const CreditSimulation = () => {
           </Button>
         </FormControl>
       </form>
+      <p> Cuota mensual simulada: $ {simulatedAmount} </p>
     </Box>
   );
 };

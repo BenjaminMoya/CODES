@@ -6,14 +6,10 @@ import Divider from "@mui/material/Divider";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import PaidIcon from "@mui/icons-material/Paid";
-import CalculateIcon from "@mui/icons-material/Calculate";
-import AnalyticsIcon from "@mui/icons-material/Analytics";
-import DiscountIcon from "@mui/icons-material/Discount";
-import HailIcon from "@mui/icons-material/Hail";
-import MedicationLiquidIcon from "@mui/icons-material/MedicationLiquid";
-import MoreTimeIcon from "@mui/icons-material/MoreTime";
+import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
+import EditNotifications from '@mui/icons-material/EditNotifications';
+import ListAlt from '@mui/icons-material/ListAlt';
+import Calculate from "@mui/icons-material/Calculate";
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
 
@@ -37,16 +33,30 @@ export default function Sidemenu({ open, toggleDrawer }) {
 
         <ListItemButton onClick={() => navigate("/credit/simulation")}>
           <ListItemIcon>
-            <PeopleAltIcon />
+            <Calculate />
           </ListItemIcon>
           <ListItemText primary="Simulacion de credito" />
         </ListItemButton>
 
         <ListItemButton onClick={() => navigate("/credit/application")}>
           <ListItemIcon>
-            <MoreTimeIcon />
+            <AddCircleOutline />
           </ListItemIcon>
           <ListItemText primary="Solicitar credito" />
+        </ListItemButton>
+
+        <ListItemButton onClick={() => navigate("/credit/list")}>
+          <ListItemIcon>
+            <EditNotifications />
+          </ListItemIcon>
+          <ListItemText primary="Evaluar credito" />
+        </ListItemButton>
+
+        <ListItemButton onClick={() => navigate("/user/credits")}>
+          <ListItemIcon>
+            <ListAlt />
+          </ListItemIcon>
+          <ListItemText primary="Mis creditos" />
         </ListItemButton>
       </List>
     </Box>

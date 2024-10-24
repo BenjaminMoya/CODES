@@ -27,40 +27,23 @@ public class savingCapacityService {
         }
     }
 
-    public int savingHistory(long userId,ArrayList<Double> monthlyBalance,ArrayList<Double> monthlyMaxOut){
-        boolean noZero = true;
-        for (Double amount : monthlyBalance) {
-            if (amount<= 0) {
-                noZero = false;
-                break;
-            }
+    public int savingHistory(long userId,boolean greatRetirement){
+        if(greatRetirement){
+            return 0;
         }
-
-        for(int i = 0;i<monthlyMaxOut.size();i++){
-
-            if(monthlyMaxOut.get(i)>(monthlyBalance.get(i)*0.5) || !noZero){
-                return 0;
-            }
-        }
-
         userEntity user = UserRepository.findByUserId(userId);
         user.setUserSavingCapacity(user.getUserSavingCapacity()+1);
         UserService.updateUser(user);
         return 1;
     }
 
-    public int periodicDeposit(long userId, ArrayList<Double> userDeposit, double monthlyEntry, boolean isPeriodic){
+    public int periodicDeposit(long userId, double monthlyDeposit, double monthlyEntry, boolean isPeriodic){
 
-        if(!isPeriodic){
+        if(!isPeriodic) {
             return 0;
         }
 
-        double monthlySum = 0;
-        for(Double amount : userDeposit){
-            monthlySum+=amount;
-        }
-
-        if(monthlySum < monthlyEntry*0.05){
+        if(monthlyDeposit < monthlyEntry*0.05){
             return 0;
         }
 
@@ -73,13 +56,13 @@ public class savingCapacityService {
     public int relationSA(long userId, double creditAmount){
         userEntity user = UserRepository.findByUserId(userId);
 
-        if(user.getUserAccountSeniority() < 2 && user.getUserBalance() > creditAmount*0.2){
+        if(user.getUserAccountSeniority() < 2 && user.getUserBalance() >= creditAmount*0.2){
             user.setUserSavingCapacity(user.getUserSavingCapacity()+1);
             UserService.updateUser(user);
             return 1;
         }
 
-        if(user.getUserAccountSeniority() >= 2 && user.getUserBalance() > creditAmount*0.1){
+        if(user.getUserAccountSeniority() >= 2 && user.getUserBalance() >= creditAmount*0.1){
             user.setUserSavingCapacity(user.getUserSavingCapacity()+1);
             UserService.updateUser(user);
             return 1;
@@ -88,14 +71,12 @@ public class savingCapacityService {
         return 0;
     }
 
-    public int recentOut(long userId, ArrayList<Double> userMaxMonthlyOut, ArrayList<Double> monthlyBalance){
-        for(int i = 0;i<userMaxMonthlyOut.size();i++){
-            if(userMaxMonthlyOut.get(i) > (monthlyBalance.get(i)*0.3)){
-                return 0;
-            }
-        }
+    public int recentOut(long userId, double maxRetirement){
 
         userEntity user = UserRepository.findByUserId(userId);
+        if(user.getUserBalance()*0.3 < maxRetirement){
+            return 0;
+        }
         user.setUserSavingCapacity(user.getUserSavingCapacity()+1);
         UserService.updateUser(user);
         return 1;
