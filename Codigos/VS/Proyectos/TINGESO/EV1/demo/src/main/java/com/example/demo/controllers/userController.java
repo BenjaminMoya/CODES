@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -59,6 +60,13 @@ public class userController {
     public ResponseEntity<userEntity> updateUser(@RequestBody userEntity user){
         userEntity userUpdated = UserService.updateUser(user);
         return ResponseEntity.ok(userUpdated);
+    }
+
+    @PostMapping("/transfer")
+    public double transferAmount(@RequestBody Map<String, Object> body){
+        long userId = Long.parseLong(body.get("userId").toString());
+        long creditId = Long.parseLong(body.get("creditId").toString());
+        return UserService.transferAmount(userId,creditId);
     }
 
     @DeleteMapping("/delete/{userId}")

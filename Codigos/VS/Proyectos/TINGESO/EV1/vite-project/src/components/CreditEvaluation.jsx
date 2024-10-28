@@ -15,22 +15,25 @@ import CancelSharpIcon from '@mui/icons-material/CancelSharp';
 import userService from "../services/user.service";
 import creditService from "../services/credit.service";
 import Tooltip from "@mui/material/Tooltip";
+import EventIcon from '@mui/icons-material/Event';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox"
 import savingCapacityService from "../services/savingCapacity.service";
+import fileService from "../services/file.service";
 
 const CreditEvaluation = () => {
 
   const creditInit = JSON.parse(sessionStorage.getItem("toEvaluate"));
-  const [creditId,setCreditId] = useState(creditInit.creditId);
-  const [creditUserId, setCreditUserId] = useState(creditInit.creditUserId);
-  const [creditPropertyAmount, setCreditPropertyAmount] = useState(creditInit.creditPropertyAmount);
-  const [creditRequestedAmount, setCreditRequestedAmount] = useState(creditInit.creditRequestedAmount);
-  const [creditTerm,setCreditTerm] = useState(creditInit.creditTerm);
-  const [creditInitDate,setCreditInitDate] = useState(creditInit.creditInitDate);
-  const [creditType,setCreditType] = useState(creditInit.creditType);
-  const [latePayment,setLatePayment] = useState(creditInit.latePayment);
-  const [maxAmount,setmaxAmount] = useState(creditInit.maxAmount);
+  const [creditId] = useState(creditInit.creditId);
+  const [creditUserId] = useState(creditInit.creditUserId);
+  const [creditPropertyAmount] = useState(creditInit.creditPropertyAmount);
+  const [creditRequestedAmount] = useState(creditInit.creditRequestedAmount);
+  const [creditTerm] = useState(creditInit.creditTerm);
+  const [creditFirmDate,setCreditFirmDate] = useState(creditInit.creditFirmDate);
+  const [creditType] = useState(creditInit.creditType);
+  const [creditReason,setCreditReason] = useState("");
   const [interest, setInterest] = useState("");
   const [monthlyEntry, setMonthlyEntry] = useState("");
   const [monthlyDeposit, setMonthlyDeposit] = useState("");
@@ -43,13 +46,14 @@ const CreditEvaluation = () => {
   const [executive,setExecutive] = useState("");
   const [workSeniority,setWorkSeniority] = useState("");
   const [indepedent,setIndependent] = useState("");
+  const [selectedFile1, setSelectedFile1] = useState(null);
+  const today = new Date().toISOString().split('T')[0];
+  const firmDate = new Date(creditFirmDate).toISOString().split('T')[0];
   const [options, setOptions] = useState({
     greatRetirement: false,
     periodicDeposits: false,
   });
   const navigate = useNavigate();
-  const valueApproved = 4;
-  const valueRejected = 7;
   
   const init = () => {
 
@@ -73,6 +77,17 @@ const CreditEvaluation = () => {
   useEffect(() => {
     init();
   }, []);
+
+  const handleFileChange1 = (event) => {
+    setSelectedFile1(event.target.files[0]);
+  };
+
+  const handleDateChange = (e) => {
+    const dateValue = e.target.value;
+    
+    const dateObject = new Date(dateValue);
+    setCreditFirmDate(dateObject);
+  };
 
   const ev1 = () => {
     if(creditType == 1){
@@ -211,6 +226,16 @@ const CreditEvaluation = () => {
   }
 
   const ev3 = () => {
+    if(creditType == 1 && (interest < 3.5 || interest > 5)){
+      return alert("El interes debe estar entre 3.5% y 5%");
+    } else if(creditType == 2 && (interest < 4 || interest > 6)){
+      return alert("El interes debe estar entre 4% y 6%");
+    } else if(creditType == 3 && (interest < 5 || interest > 7)){
+      return alert("El interes debe estar entre 5% y 7%");
+    } else if(creditType == 4 && (interest < 4.5 || interest > 6)){
+      return alert("El interes debe estar entre 4.5% y 6%");
+    }
+
     creditService
     .relation1(creditRequestedAmount,interest,creditTerm,monthlyEntry)
     .then((response) => {
@@ -345,15 +370,17 @@ const CreditEvaluation = () => {
         error
       );
     });
-  
-  }
+  };
 
   const approve = (e) => {
     e.preventDefault();
 
-    const credit = { creditId, creditUserId, creditRequestedAmount, valueApproved, creditTerm, creditInitDate, creditType, latePayment, maxAmount };
-
     creditService
+    .monthly(creditRequestedAmount,interest,creditTerm)
+    .then((response) => {
+      console.log("Cuota mensual: ", response.data);
+      const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:response.data*12*creditTerm, creditPhase:4 ,creditTerm, creditFirmDate, creditType, creditReason};
+      creditService
       .update(credit)
       .then((response) => {
         console.log("El credito ha sido aprobado.", response.data);
@@ -365,29 +392,128 @@ const CreditEvaluation = () => {
           error
         );
       });
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar obtener la cuota mensual.", error);
+    });
   };
 
   const reject = (e) => {
     e.preventDefault();
+    
+    const credit = { creditId, creditUserId, creditPropertyAmount, creditRequestedAmount, creditPhase:7 ,creditTerm, creditFirmDate, creditType, creditReason};
+    creditService
+    .update(credit)
+    .then((response) => {
+      console.log("El credito ha sido aprobado.", response.data);
+      navigate("/credit/list");
+    })
+    .catch((error) => {
+      console.log(
+        "Ha ocurrido un error al intentar aprobar el credito.",
+        error
+      );
+    });
+  };
 
-    const credit = { creditId, creditUserId, creditRequestedAmount, valueRejected, creditTerm, creditInitDate, creditType, latePayment, maxAmount };
+  const accept = (e) => {
+    e.preventDefault();
+
+    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:4 ,creditTerm, creditFirmDate, creditType, creditReason:creditInit.creditReason};
+    creditService
+    .update(creditId)
+    .then((response) => {
+      console.log("El credito ha sido aprobado.", response.data);
+      navigate("/user/credits");
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar aprobar el credito.", error);
+    });
+  };
+
+  const cancel = (e) => {
+    e.preventDefault();
 
     creditService
+    .deleteCredit(creditId)
+    .then((response) => {
+      console.log("El credito ha sido cancelado.", response.data);
+      navigate("/user/credits");
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar cancelar el credito.", error);
+    });
+  };
+
+  const contract = (e) => {
+    e.preventDefault();
+
+    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:6 ,creditTerm, creditFirmDate, creditType, creditReason:creditInit.creditReason};
+
+    creditService
+    .update(credit)
+    .then((response) => {
+      console.log("El credito ha sido aprobado.", response.data);
+      fileService
+      .upload(creditId,8,selectedFile1)
+      .then((response) => {
+        console.log("El contrato ha sido subido.", response.data);
+        navigate("/user/credits");
+      })
+      .catch((error) => {
+        console.log("Ha ocurrido un error al intentar subir el contrato.", error);
+      });
+      navigate("/credit/list");
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar aprobar el credito.", error);
+    });
+  };
+
+  const finalAccept = (e) => {
+    e.preventDefault();
+
+    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:9 ,creditTerm, creditFirmDate, creditType, creditReason:creditInit.creditReason};
+
+    creditService
+    .update(credit)
+    .then((response) => {
+      console.log("El credito ha sido aprobado.", response.data);
+      navigate("/user/credits");
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar aprobar el credito.", error);
+    });
+  };
+
+  const transfer = (e) => {
+    e.preventDefault();
+
+    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:0 ,creditTerm, creditFirmDate, creditType, creditReason:creditInit.creditReason};
+    userService
+    .transfer(creditUserId,creditId)
+    .then((response) => {
+      console.log("El credito ha sido transferido.", response.data);
+      creditService
       .update(credit)
       .then((response) => {
-        console.log("El credito ha sido rechazado.", response.data);
+        console.log("El credito ha sido completado.", response.data);
         navigate("/credit/list");
       })
       .catch((error) => {
         console.log(
-          "Ha ocurrido un error al intentar rechazar el credito.",
+          "Ha ocurrido un error al intentar aprobar el credito.",
           error
         );
       });
-  };
 
-  
-  if(executive){
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar transferir el credito.", error);
+    });
+  }
+
+  if(executive && creditInit.creditPhase == 3){
     return (
       <div>
         <br />
@@ -415,7 +541,7 @@ const CreditEvaluation = () => {
           <h3> Datos del credito </h3>
           <form>
             <p> Usuario: {creditUserId} </p>
-            <p> Fecha de solicitud: {creditInitDate} </p>
+            <p> Fecha de solicitud: {creditFirmDate} </p>
             {creditType== 1 && (
               <p> Tipo de credito: Primera vivienda </p>
             )}
@@ -629,6 +755,22 @@ const CreditEvaluation = () => {
               </Button>
     
             </FormControl>
+
+            <h3> Razones crediticias </h3>
+
+            <FormControl fullWidth>
+            <TextField
+              id="creditReason"
+              label="Indicaciones"  
+              value={creditReason}
+              type="text"
+              variant="standard"
+              onChange={(e) => setCreditReason(e.target.value)}
+              helperText="Si se planea rechazar el credito indique los motivo."
+              multiline
+              rows={4} 
+            />
+            </FormControl>
     
           </form>
           <br />
@@ -666,7 +808,8 @@ const CreditEvaluation = () => {
             <Link to="/credit/list">Back to List</Link>
       </div>
     );
-  } else {
+
+  } else if (executive && creditInit.creditPhase == 5){ 
 
     return (
       <Box
@@ -678,10 +821,8 @@ const CreditEvaluation = () => {
       >
         <h3> Datos del credito </h3>
         <form>
-          <p> Usuario: {creditUserId} </p>
           <p> Monto solicitado: ${creditRequestedAmount} (CLP) </p>
           <p> Plazo: {creditTerm} </p>
-          <p> Fecha de solicitud: {creditInitDate} </p>
           {creditType== 1 && (
             <p> Tipo de credito: Primera vivienda </p>
           )}
@@ -694,13 +835,236 @@ const CreditEvaluation = () => {
           {creditType== 4 && (
             <p> Tipo de credito: Remodelacion </p>
           )}
+          
+          <p>Etapa: Preparacion de documentacion </p>
+
+          <FormControl fullWidth>
+            <p>Programacion firma</p>
+              <input
+                type="date"
+                min={today}
+                onChange={handleDateChange}
+              />
+          </FormControl>
+          <p>Fecha seleccionada: {creditFirmDate ? creditFirmDate.toDateString() : 'Ninguna'}</p>
+  
+          <br />
+          <FormControl fullWidth style={{ marginTop: 16 }}>
+          {selectedFile1 && (
+              <p>Archivo seleccionado: {selectedFile1.name}</p>
+          )}
+            <Button 
+              variant="contained" 
+              component="label"
+              size="small"
+              style={{ margin: '8px 0', width: '200px' }} 
+              alignItems="center"
+            >
+              Contrato crediticio 
+            <input
+              type="file"
+              accept=".pdf"
+              hidden
+              onChange={handleFileChange1}
+            />
+            </Button>
+          </FormControl>
           <FormControl>
             <br />
   
             <Button
               variant="contained"
               color="info"
-              onClick={(e) => reject(e)}
+              onClick={(e) => contract(e)}
+              style={{ marginLeft: "0.5rem" }}
+              startIcon={<HistoryEduIcon />}
+            >
+              Enviar contrato
+            </Button>
+          </FormControl>
+        </form>
+        <br />
+        <Link to="/credit/list">Volver a la lista</Link>
+      </Box>
+    );
+
+  } else if(!executive && creditInit.creditPhase == 6){ 
+
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        component="form"
+      >
+        <h3> Datos del credito </h3>
+        <form>
+          <p> Monto solicitado: ${creditRequestedAmount} (CLP) </p>
+          <p> Plazo: {creditTerm} </p>
+          <p> Etapa: Lista para desembolso </p>
+          <p> Fecha de firma: {firmDate} </p>
+  
+          <br />
+          
+          <FormControl>
+            <br />
+  
+            <Button
+              variant="contained"
+              color="info"
+              onClick={(e) => finalAccept(e)}
+              style={{ marginLeft: "0.5rem" }}
+              startIcon={<EventIcon />}
+            >
+              Aceptar fecha
+            </Button>
+          </FormControl>
+          <FormControl>
+            <br />
+  
+            <Button
+              variant="contained"
+              color="info"
+              onClick={(e) => cancel(e)}
+              style={{ marginLeft: "0.5rem" }}
+              startIcon={<CloseSharpIcon />}
+            >
+              Cancelar Solicitud
+            </Button>
+          </FormControl>
+        </form>
+        <br />
+        <Link to="/credit/list">Volver a la lista</Link>
+      </Box>
+    );
+
+  } else if(executive && creditInit.creditPhase == 9){ 
+
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        component="form"
+      >
+        <h3> Datos del credito </h3>
+        <form>
+          <p> Monto solicitado: ${creditRequestedAmount} (CLP) </p>
+          <p> Plazo: {creditTerm} </p>
+          <p> Etapa: En desembolso </p>
+  
+          <br />
+          
+          <FormControl>
+            <br />
+  
+            <Button
+              variant="contained"
+              color="info"
+              onClick={(e) => transfer(e)}
+              style={{ marginLeft: "0.5rem" }}
+              startIcon={<AccountBalanceWalletIcon />}
+            >
+              Transferir fondos
+            </Button>
+          </FormControl>
+        </form>
+        <br />
+        <Link to="/credit/list">Volver a la lista</Link>
+      </Box>
+    );
+  } else if(!executive && creditInit.creditPhase == 0){ 
+
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        component="form"
+      >
+        <h3> Datos del credito </h3>
+        <form>
+          <p> Monto solicitado: ${creditRequestedAmount} (CLP) </p>
+          <p> Plazo: {creditTerm} años</p>
+          <p> Etapa: Transferida </p>
+  
+        </form>
+        <br />
+        <Link to="/user/credits">Volver a la lista</Link>
+      </Box>
+    ); 
+  } else {
+
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        component="form"
+      >
+        <h3> Datos del credito </h3>
+        <form>
+          <p> Monto solicitado: ${creditRequestedAmount} (CLP) </p>
+          <p> Plazo: {creditTerm} </p>
+          {creditType== 1 && (
+            <p> Tipo de credito: Primera vivienda </p>
+          )}
+          {creditType== 2 && (
+            <p> Tipo de credito: Segunda vivienda </p>
+          )}
+          {creditType== 3 && (
+            <p> Tipo de credito: Propiedad comercial </p>
+          )}
+          {creditType== 4 && (
+            <p> Tipo de credito: Remodelacion </p>
+          )}
+          {creditInit.creditPhase == 3 && (
+            <p>Etapa: En evaluacion </p>
+          )}
+          {creditInit.creditPhase == 4 && (
+            <div>
+              <p>Etapa: Pre-aprobada </p>
+              <p>Propuesta de monto final: ${creditInit.creditProposedAmount} (CLP)</p>
+              <p>Propuesta de cuota mensual: ${creditInit.creditProposedAmount/(12*creditTerm)} (CLP)</p>
+              <FormControl>
+                <br />
+  
+                <Button
+                  variant="contained"
+                  color="info"
+                  onClick={(e) => accept(e)}
+                  style={{ marginLeft: "0.5rem" }}
+                  startIcon={<DoneAllSharpIcon />}
+                >
+                  Aceptar propuesta
+                </Button>
+              </FormControl>
+            </div>
+          )}
+          {creditInit.creditPhase == 5 && (
+            <p>Etapa: Preparacion de documentacion </p>
+          )}
+          {creditInit.creditPhase == 6 && (
+            <p>Etapa: Lista para desembolso</p>
+          )}
+          {creditInit.creditPhase == 7 && (
+            <p>Etapa: Rechazada </p>
+          )}
+          {creditInit.creditPhase == 9 && (
+            <p>Etapa: En desembolso </p>
+          )}
+          <br />
+          <FormControl>
+            <br />
+  
+            <Button
+              variant="contained"
+              color="info"
+              onClick={(e) => cancel(e)}
               style={{ marginLeft: "0.5rem" }}
               startIcon={<CloseSharpIcon />}
             >

@@ -42,13 +42,10 @@ public class creditController {
         }
     }
 
-    @PostMapping("/update")
-    public ResponseEntity<creditEntity> updateCredit(@RequestBody creditEntity credit){
-        try{
-            return ResponseEntity.ok(CreditService.updateCredit(credit));
-        } catch (Exception e) {
-            return null;
-        }
+    @PutMapping("/update")
+    public ResponseEntity<creditEntity> creditUpdate(@RequestBody creditEntity credit){
+        creditEntity newCredit = CreditService.updateCredit(credit);
+        return ResponseEntity.ok(newCredit);
     }
 
     @GetMapping("/simulation")
@@ -84,6 +81,15 @@ public class creditController {
     public double finalCreditAmount(@RequestParam("amount") double monthlyAmount,
                                     @RequestParam("years") int years){
         return CreditService.finalCreditAmount(monthlyAmount,years);
+    }
+
+    @DeleteMapping("/delete/{creditId}")
+    public int deleteCredit(@PathVariable long creditId){
+        try {
+            return CreditService.deleteCredit(creditId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

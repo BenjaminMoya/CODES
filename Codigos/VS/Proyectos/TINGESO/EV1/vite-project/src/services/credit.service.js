@@ -8,20 +8,8 @@ const getPhase = (phase) => {
     return httpCommon.get(`/api/credit/phase/${phase}`);
 }
 
-const getCredit = (id) => {
-    return httpCommon.get(`/api/credit/getCredit/${id}`);
-}
-
 const create = (data) => {
   return httpCommon.post('/api/credit/save', data);
-}
-
-const expired = (id) => {
-    return httpCommon.put(`/api/credit/expired/${id}`);
-}
-
-const next = (id) => {
-    return httpCommon.put(`/api/credit/next/${id}`);
 }
 
 const update = (data) => {
@@ -40,16 +28,16 @@ const relation2 = (amount,debts,monthly) => {
     return httpCommon.get('/api/credit/relation2',{params:{amount,debts,monthly}});
 }
 
-const max = (type,amount) => {
-    return httpCommon.post('/api/credit/max',{params:{type,amount}});
-}
-
 const monthly = (amount,interest,years) => {
-    return httpCommon.post('/api/credit/monthly',{params:{amount,interest,years}});
+    return httpCommon.get('/api/credit/monthly',{params:{amount,interest,years}});
 }
 
 const final = (amount,years) => {
-    return httpCommon.post('/api/credit/final',{params:{amount,years}});
+    return httpCommon.get('/api/credit/final',{params:{amount,years}});
 }
 
-export default { getAll, getPhase , next, create, expired, update, simulation, relation1, relation2, max, monthly, final };
+const deleteCredit = (id) => {
+    return httpCommon.delete(`/api/credit/delete/${id}`);
+}
+
+export default { getAll, getPhase , create, update, simulation, relation1, relation2, monthly, final, deleteCredit };

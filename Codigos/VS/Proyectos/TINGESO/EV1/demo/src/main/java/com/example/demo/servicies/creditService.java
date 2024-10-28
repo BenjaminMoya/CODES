@@ -4,10 +4,7 @@ import com.example.demo.entities.creditEntity;
 import com.example.demo.repositories.creditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 @Service
 public class creditService {
@@ -33,6 +30,15 @@ public class creditService {
 
     public creditEntity updateCredit(creditEntity credit){
         return CreditRepository.save(credit);
+    }
+
+    public int deleteCredit(long creditId) throws Exception {
+        try{
+            CreditRepository.deleteById(creditId);
+            return 1;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     public double creditAmountSimulation(double requestedAmount,double interest,int years){

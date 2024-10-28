@@ -11,6 +11,7 @@ import fileService from "../services/file.service";
 
 const CreditApplication = () => {
 
+  const [creditId, setCreditId] = useState("");
   const [creditUserId, setCreditUserId] = useState("0");
   const [creditPropertyAmount, setCreditPropertyAmount] = useState("");
   const [creditRequestedAmount, setCreditRequestedAmount] = useState("");
@@ -73,24 +74,34 @@ const CreditApplication = () => {
     }
 
     setCreditFinishDate(makeDate(creditTerm));
-    const credit = { creditUserId, creditRequestedAmount, creditPhase, creditTerm, creditFinishDate, creditType, latePayment, maxAmount };
+    const credit = { creditUserId, creditPropertyAmount, creditRequestedAmount, creditPhase, creditTerm, creditFinishDate, creditType, latePayment, maxAmount };
     console.log("Datos del credito:", credit);
     if (creditUserId) {
       creditService
       .create(credit)
       .then((response) => {
         console.log("El credito ha sido solicitado.", response.data);
+        setCreditId(response.data.creditId);
         if(creditType == 1){
           fileService
-          .upload(response.data.creditId,0,selectedFile1)
+          .upload(selectedFile1)
           .then((response) => {
             console.log(response.data);
+            const file1 = { creditId , type:1 , filename: selectedFile1.name};{/* Aqui voy */}
+            fileService
+            .create(file1)
+            .then((response) => {
+              console.log("El archivo 1 ha sido subido.", response.data);
+            })
+            .catch((error) => {
+              console.log("Error en la subida del archivo 1 .", error);
+            });
           })
           .catch((error) => {
             console.log("Error en el la subida del primer archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,1,selectedFile2)
+          .upload(selectedFile2)
           .then((response) => {
             console.log(response.data);
           })
@@ -98,7 +109,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del segundo archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,2,selectedFile3)
+          .upload(selectedFile3)
           .then((response) => {
             console.log(response.data);
           })
@@ -107,7 +118,7 @@ const CreditApplication = () => {
           });
         } else if(creditType == 2) {
           fileService
-          .upload(response.data.creditId,0,selectedFile1)
+          .upload(selectedFile1)
           .then((response) => {
             console.log(response.data);
           })
@@ -115,7 +126,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del primer archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,1,selectedFile2)
+          .upload(selectedFile2)
           .then((response) => {
             console.log(response.data);
           })
@@ -123,7 +134,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del segundo archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,4,selectedFile3)
+          .upload(selectedFile3)
           .then((response) => {
             console.log(response.data);
           })
@@ -131,7 +142,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del tercer archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,2,selectedFile4)
+          .upload(selectedFile4)
           .then((response) => {
             console.log(response.data);
           })
@@ -140,7 +151,7 @@ const CreditApplication = () => {
           });
         } else if(creditType == 3) {
           fileService
-          .upload(response.data.creditId,4,selectedFile1)
+          .upload(selectedFile1)
           .then((response) => {
             console.log(response.data);
           })
@@ -148,7 +159,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del primer archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,0,selectedFile2)
+          .upload(selectedFile2)
           .then((response) => {
             console.log(response.data);
           })
@@ -156,7 +167,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del segundo archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,1,selectedFile3)
+          .upload(selectedFile3)
           .then((response) => {
             console.log(response.data);
           })
@@ -164,7 +175,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del tercer archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,5,selectedFile4)
+          .upload(selectedFile4)
           .then((response) => {
             console.log(response.data);
           })
@@ -173,7 +184,7 @@ const CreditApplication = () => {
           });
         } else {
           fileService
-          .upload(response.data.creditId,0,selectedFile1)
+          .upload(selectedFile1)
           .then((response) => {
             console.log(response.data);
           })
@@ -181,7 +192,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del primer archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,6,selectedFile2)
+          .upload(selectedFile2)
           .then((response) => {
             console.log(response.data);
           })
@@ -189,7 +200,7 @@ const CreditApplication = () => {
             console.log("Error en el la subida del segundo archivo.", error);
           });
           fileService
-          .upload(response.data.creditId,7,selectedFile3)
+          .upload(selectedFile3)
           .then((response) => {
             console.log(response.data);
           })

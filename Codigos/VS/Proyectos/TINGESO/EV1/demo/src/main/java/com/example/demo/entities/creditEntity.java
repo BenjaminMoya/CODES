@@ -23,12 +23,12 @@ public class creditEntity {
     private long creditUserId;
     private double creditPropertyAmount;
     private double creditRequestedAmount;
+    private double creditProposedAmount;
     private int creditPhase;
     private int creditTerm;
-    private Date creditInitDate;
+    private Date creditFirmDate;
 
     // Primera = 1, Segunda = 2, Comercial = 3, Remodelacion = 4
     private int creditType;
-    private boolean latePayment;
-    private double maxAmount;
+    private String creditReason;
 }

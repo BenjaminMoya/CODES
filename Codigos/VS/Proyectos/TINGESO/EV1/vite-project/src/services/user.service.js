@@ -36,4 +36,8 @@ const zero = (id) => {
     return httpCommon.post(`/api/user/zero/${id}`);
 }
 
-export default { getAll, getById, getByRut, getByEmail, create, login, update, remove, zero };
+const transfer = (userId,creditId) => {
+    return httpCommon.post("/api/user/transfer",{ userId, creditId});
+}
+
+export default { getAll, getById, getByRut, getByEmail, create, login, update, remove, zero, transfer };

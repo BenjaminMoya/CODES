@@ -92,7 +92,28 @@ const UserCredits = () => {
                 )}
                 <TableCell align="right">{credit.creditRequestedAmount}</TableCell>
                 <TableCell align="center">{credit.creditTerm}</TableCell>
-                <TableCell align="center">{credit.creditPhase}</TableCell>
+                {credit.creditPhase == 0 && (
+                <TableCell align="center">Transferido
+                </TableCell>
+                )}
+                {credit.creditPhase == 3 && (
+                <TableCell align="center">En evaluacion</TableCell>
+                )}
+                {credit.creditPhase == 4 && (
+                <TableCell align="center">Pre-aprobado</TableCell>
+                )}
+                {credit.creditPhase == 5 && (
+                <TableCell align="center">Aprobacion final</TableCell>
+                )}
+                {credit.creditPhase == 6 && (
+                <TableCell align="center">Aprobado</TableCell>
+                )}
+                {credit.creditPhase == 7 && (
+                <TableCell align="center">Rechazado</TableCell>
+                )}
+                {credit.creditPhase == 9 && (
+                <TableCell align="center">En desembolso</TableCell>
+                )}
                 <TableCell>
                 <Button
                   variant="contained"

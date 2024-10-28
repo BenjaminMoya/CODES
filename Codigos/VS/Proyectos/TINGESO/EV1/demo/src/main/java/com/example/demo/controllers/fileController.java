@@ -1,22 +1,13 @@
 package com.example.demo.controllers;
 
 import com.example.demo.entities.fileEntity;
-import com.example.demo.repositories.fileRepository;
 import com.example.demo.servicies.fileService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
+import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
 @RequestMapping("/api/file")
@@ -26,53 +17,48 @@ public class fileController {
     @Autowired
     fileService FileService;
 
-    @Autowired
-    fileRepository FileRepository;
+    @PostMapping("/save")
+    public ResponseEntity<fileEntity> saveFile(fileEntity file){
 
-    @PostMapping("/upload/{creditId}")
-    public ResponseEntity<String> uploadFile(@PathVariable long creditId,
-                                             @RequestParam int type,
-                                             @RequestParam("file")MultipartFile file){
-        try{
-            String filePath = FileService.storeFile(file);
+        fileEntity newFile = FileService.saveFile(file);
+        return ResponseEntity.ok(newFile);
+    }
 
-            fileEntity newFile = new fileEntity();
-            newFile.setFileName(file.getOriginalFilename());
-            newFile.setFilePath(filePath);
-            newFile.setFileCreditId(creditId);
-            newFile.setType(type);
-            FileService.saveFile(newFile);
+    @GetMapping("/get")
+    public ResponseEntity<fileEntity> getInformation(@RequestParam("creditId") long creditId,
+                                                     @RequestParam("type") int type){
+        fileEntity file = FileService.getInformation(creditId,type);
+        return ResponseEntity.ok(file);
+    }
 
-            return ResponseEntity.ok("Archivo subido con exito: " + filePath);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir el archivo");
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = FileService.uploadFile(file);
+            return ok("File uploaded successfully: " + fileUrl);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file");
         }
     }
 
-    @GetMapping("/download/{creditId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable long creditId,
-                                                 @RequestParam("type") int type){
-        try{
-            Optional<fileEntity> optionalFile = FileRepository.findByFileCreditIdAndType(creditId,type);
+    @GetMapping("/download")
+    public ResponseEntity<byte[]> downloadFile(@RequestParam String fileName) {
+        try {
+            byte[] fileData = FileService.downloadFile(fileName);
 
-            if(optionalFile.isEmpty()){
-                return ResponseEntity.notFound().build();
-            }
+            // Configura los encabezados para la respuesta de la descarga
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.builder("attachment")
+                    .filename(fileName)
+                    .build());
 
-            fileEntity file = optionalFile.get();
-            Path filePath = Paths.get(file.getFilePath()).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
-
-            if(!resource.exists()){
-                return ResponseEntity.notFound().build();
-            }
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
+            return ok()
+                    .headers(headers)
+                    .body(fileData);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
         }
     }
 }

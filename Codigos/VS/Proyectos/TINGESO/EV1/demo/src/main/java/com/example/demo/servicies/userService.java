@@ -1,6 +1,8 @@
 package com.example.demo.servicies;
 
+import com.example.demo.entities.creditEntity;
 import com.example.demo.entities.userEntity;
+import com.example.demo.repositories.creditRepository;
 import com.example.demo.repositories.userRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,9 @@ public class userService {
 
     @Autowired
     userRepository UserRepository;
+
+    @Autowired
+    creditRepository CreditRepository;
 
     public ArrayList<userEntity> getUsers(){
         return (ArrayList<userEntity>) UserRepository.findAll();
@@ -72,6 +77,19 @@ public class userService {
         try{
             updateUser(userTemp);
             return 1;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public double transferAmount(Long userId,Long creditId){
+        userEntity userTemp = UserRepository.findByUserId(userId);
+        creditEntity creditTemp = CreditRepository.findByCreditId(creditId);
+        double amount = userTemp.getUserBalance()+creditTemp.getCreditRequestedAmount();
+        userTemp.setUserBalance(amount);
+        try{
+            updateUser(userTemp);
+            return amount;
         } catch (Exception e) {
             return 0;
         }

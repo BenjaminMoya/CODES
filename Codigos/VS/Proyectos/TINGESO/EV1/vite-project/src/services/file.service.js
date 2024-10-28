@@ -1,11 +1,19 @@
 import httpCommon from "../http-common";
 
-const upload = (id,type,file) => {
-    return httpCommon.post(`/api/file/upload/${id}`,{params:{type,file}});
+const create = (data) => {
+    return httpCommon.post("/api/file/create", data);
 }
 
-const download = (id,type) => {
-    return httpCommon.get(`/api/file/download/${id}`,{params:{type}});
+const get = (id,type) => {
+    return httpCommon.get("/api/file/get",{params:{id,type}});
 }
 
-export default { upload, download };
+const upload = (file) => {
+    return httpCommon.post("/api/file/upload",{params:{file}});
+}
+
+const download = (filename) => {
+    return httpCommon.get(`/api/file/download`,{params:{filename}});
+}
+
+export default { create, get ,upload, download };

@@ -14,23 +14,48 @@ import creditService from "../services/credit.service";
 
 
 const CreditsList = () => {
-  const [credits, setCredits] = useState([]);
+  const [credit1, setCredit1] = useState([]);
+  const [credit2, setCredit2] = useState([]);
+  const [credit3, setCredit3] = useState([]);
 
   const navigate = useNavigate();
 
   const init = () => {
     creditService
-      .getPhase(3)
-      .then((response) => {
-        console.log("Mostrando listado de creditos por evaluar.", response.data);
-        setCredits(response.data);
-      })
-      .catch((error) => {
-        console.log(
-          "Se ha producido un error al intentar mostrar listado creditos por evaluar.",
-          error
-        );
-      });
+    .getPhase(3)
+    .then((response) => {
+      setCredit1(response.data);
+    })
+    .catch((error) => {
+      console.log(
+        "Se ha producido un error al intentar mostrar listado creditos por evaluar.",
+        error
+      );
+    });
+    
+    creditService
+    .getPhase(5)
+    .then((response) => {
+      setCredit2(response.data);
+    })
+    .catch((error) => {
+      console.log(
+      "Se ha producido un error al intentar mostrar listado creditos por evaluar.",
+       error
+      );
+    });
+
+    creditService
+    .getPhase(9)
+    .then((response) => {
+      setCredit3(response.data);
+    })
+    .catch((error) => {
+      console.log(
+      "Se ha producido un error al intentar mostrar listado creditos por evaluar.",
+       error
+      );
+    });
   };
 
   useEffect(() => {
@@ -68,7 +93,85 @@ const CreditsList = () => {
             </TableRow>
             </TableHead>
         <TableBody>
-          {credits.map((credit) => (
+          {credit1.map((credit) => (
+            <TableRow
+              key={credit.creditId}
+              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+            >
+                <TableCell align="left">{credit.creditId}</TableCell>
+                {credit.creditType== 1 && (
+                    <TableCell align="left">Primera vivienda
+                    </TableCell>
+                )}
+                {credit.creditType == 2 && (
+                <TableCell align="left">Segunda vivienda
+                </TableCell>
+                )}
+                {credit.creditType == 3 && (
+                <TableCell align="left">Propiedad comercial
+                </TableCell>
+                )}
+                {credit.creditType == 4 && (
+                <TableCell align="left">Remodelacion
+                </TableCell>
+                )}
+                <TableCell align="right">{credit.creditRequestedAmount}</TableCell>
+                <TableCell align="center">{credit.creditTerm}</TableCell>
+                <TableCell align="center">{credit.creditPhase}</TableCell>
+                <TableCell>
+                <Button
+                  variant="contained"
+                  color="info"
+                  size="small"
+                  onClick={() => goEvaluation(credit)}
+                  style={{ marginLeft: "0.5rem" }}
+                  startIcon={<AppRegistrationSharpIcon />}
+                >
+                  Evaluar
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {credit2.map((credit) => (
+            <TableRow
+              key={credit.creditId}
+              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+            >
+                <TableCell align="left">{credit.creditId}</TableCell>
+                {credit.creditType== 1 && (
+                    <TableCell align="left">Primera vivienda
+                    </TableCell>
+                )}
+                {credit.creditType == 2 && (
+                <TableCell align="left">Segunda vivienda
+                </TableCell>
+                )}
+                {credit.creditType == 3 && (
+                <TableCell align="left">Propiedad comercial
+                </TableCell>
+                )}
+                {credit.creditType == 4 && (
+                <TableCell align="left">Remodelacion
+                </TableCell>
+                )}
+                <TableCell align="right">{credit.creditRequestedAmount}</TableCell>
+                <TableCell align="center">{credit.creditTerm}</TableCell>
+                <TableCell align="center">{credit.creditPhase}</TableCell>
+                <TableCell>
+                <Button
+                  variant="contained"
+                  color="info"
+                  size="small"
+                  onClick={() => goEvaluation(credit)}
+                  style={{ marginLeft: "0.5rem" }}
+                  startIcon={<AppRegistrationSharpIcon />}
+                >
+                  Evaluar
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {credit3.map((credit) => (
             <TableRow
               key={credit.creditId}
               sx={{ "&:last-child td, &:last-child th": { border: 0 } }}

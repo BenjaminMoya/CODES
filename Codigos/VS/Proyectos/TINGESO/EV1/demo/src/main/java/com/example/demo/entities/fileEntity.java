@@ -17,10 +17,9 @@ public class fileEntity {
     @Column(unique = true,nullable = false)
     private long fileId;
 
-    private long fileCreditId;
-    private String fileName;
-    private String filePath;
+    private long creditId;
+    private String filename;
 
-    // 0 = CI, 1 = CA, 2 = HC, 3 = EPV, 4 = EFN, 5 = PLN, 6 = PR, 7 = CAA
+    // 1=CI,2=CA,3=HC,4=EPV,5=EFN,6=PDN,7=PR,8=CAA,9=Contrato
     private int type;
 }
