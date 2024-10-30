@@ -11,7 +11,6 @@ import fileService from "../services/file.service";
 
 const CreditApplication = () => {
 
-  const [creditId, setCreditId] = useState("");
   const [creditUserId, setCreditUserId] = useState("0");
   const [creditPropertyAmount, setCreditPropertyAmount] = useState("");
   const [creditRequestedAmount, setCreditRequestedAmount] = useState("");
@@ -59,6 +58,21 @@ const CreditApplication = () => {
 
   const saveCredit = (e) => {
     e.preventDefault();
+
+    if(creditRequestedAmount=="" || creditPropertyAmount=="" || creditTerm==""){
+      alert("Debe completar todos los campos.");
+      return;
+    }
+
+    if(isNaN(creditRequestedAmount) || isNaN(creditPropertyAmount) || isNaN(creditTerm)){
+      alert("Los campos monto, precio de la propiedad y plazo deben ser numeros enteros.");
+      return;
+    }
+
+    if(creditRequestedAmount%1 != 0 || creditPropertyAmount%1 != 0 || creditTerm%1 != 0){
+      alert("Los campos monto, precio de la propiedad y plazo deben ser numeros enteros.");
+      return;
+    }
     
     if(creditType == 1 && selectedFile1 && selectedFile2 && selectedFile3){
       setMaxAmount(creditRequestedAmount*0,8);
@@ -81,134 +95,170 @@ const CreditApplication = () => {
       .create(credit)
       .then((response) => {
         console.log("El credito ha sido solicitado.", response.data);
-        setCreditId(response.data.creditId);
+        const creditId = response.data.creditId;
         if(creditType == 1){
           fileService
-          .upload(selectedFile1)
+          .upload(creditId,1,selectedFile1)
           .then((response) => {
-            console.log(response.data);
-            const file1 = { creditId , type:1 , filename: selectedFile1.name};{/* Aqui voy */}
+            console.log("Archivo 1 subido: ", response.data);
             fileService
-            .create(file1)
+            .upload(creditId,2,selectedFile2)
             .then((response) => {
-              console.log("El archivo 1 ha sido subido.", response.data);
+              console.log("Archivo 2 subido: ", response.data);
+              fileService
+              .upload(creditId,3,selectedFile3)
+              .then((response) => {
+                console.log("Archivo 3 subido: ", response.data);
+                navigate("/user/credits");
+              })
+              .catch((error) => {
+                console.log(
+                  "Ha ocurrido un error al subir el archivo 3.",
+                  error
+                );
+              });
             })
             .catch((error) => {
-              console.log("Error en la subida del archivo 1 .", error);
+              console.log(
+                "Ha ocurrido un error al subir el archivo 2.",
+                error
+              );
             });
           })
           .catch((error) => {
-            console.log("Error en el la subida del primer archivo.", error);
+            console.log(
+              "Ha ocurrido un error al subir el archivo 1.",
+              error
+            );
           });
+        } else if (creditType == 2){
           fileService
-          .upload(selectedFile2)
+          .upload(creditId,1,selectedFile1)
           .then((response) => {
-            console.log(response.data);
+            console.log("Archivo 1 subido: ", response.data);
+            fileService
+            .upload(creditId,2,selectedFile2)
+            .then((response) => {
+              console.log("Archivo 2 subido: ", response.data);
+              fileService
+              .upload(creditId,4,selectedFile4)
+              .then((response) => {
+                console.log("Archivo 3 subido: ", response.data);
+                fileService
+                .upload(creditId,3,selectedFile3)
+                .then((response) => {
+                  console.log("Archivo 3 subido: ", response.data);
+                  navigate("/user/credits");
+                })
+                .catch((error) => {
+                  console.log(
+                    "Ha ocurrido un error al subir el archivo 3.",
+                    error
+                  );
+                });  
+              })
+              .catch((error) => {
+                console.log(
+                  "Ha ocurrido un error al subir el archivo 3.",
+                  error
+                );
+              });
+            })
+            .catch((error) => {
+              console.log(
+                "Ha ocurrido un error al subir el archivo 2.",
+                error
+              );
+            });
           })
           .catch((error) => {
-            console.log("Error en el la subida del segundo archivo.", error);
+            console.log(
+              "Ha ocurrido un error al subir el archivo 1.",
+              error
+            );
           });
+        } else if(creditType == 3){
           fileService
-          .upload(selectedFile3)
+          .upload(creditId,5,selectedFile1)
           .then((response) => {
-            console.log(response.data);
+            console.log("Archivo 1 subido: ", response.data);
+            fileService
+            .upload(creditId,1,selectedFile2)
+            .then((response) => {
+              console.log("Archivo 2 subido: ", response.data);
+              fileService
+              .upload(creditId,2,selectedFile3)
+              .then((response) => {
+                console.log("Archivo 3 subido: ", response.data);
+                fileService
+                .upload(creditId,6,selectedFile3)
+                .then((response) => {
+                  console.log("Archivo 3 subido: ", response.data);
+                  navigate("/user/credits");
+                })
+                .catch((error) => {
+                  console.log(
+                    "Ha ocurrido un error al subir el archivo 3.",
+                    error
+                  );
+                });  
+              })
+              .catch((error) => {
+                console.log(
+                  "Ha ocurrido un error al subir el archivo 3.",
+                  error
+                );
+              });
+            })
+            .catch((error) => {
+              console.log(
+                "Ha ocurrido un error al subir el archivo 2.",
+                error
+              );
+            });
           })
           .catch((error) => {
-            console.log("Error en el la subida del tercer archivo.", error);
+            console.log(
+              "Ha ocurrido un error al subir el archivo 1.",
+              error
+            );
           });
-        } else if(creditType == 2) {
+        } else if(creditType == 4){
           fileService
-          .upload(selectedFile1)
+          .upload(creditId,1,selectedFile1)
           .then((response) => {
-            console.log(response.data);
+            console.log("Archivo 1 subido: ", response.data);
+            fileService
+            .upload(creditId,7,selectedFile2)
+            .then((response) => {
+              console.log("Archivo 2 subido: ", response.data);
+              fileService
+              .upload(creditId,8,selectedFile3)
+              .then((response) => {
+                console.log("Archivo 3 subido: ", response.data);
+                navigate("/user/credits");
+              })
+              .catch((error) => {
+                console.log(
+                  "Ha ocurrido un error al subir el archivo 3.",
+                  error
+                );
+              });
+            })
+            .catch((error) => {
+              console.log(
+                "Ha ocurrido un error al subir el archivo 2.",
+                error
+              );
+            });
           })
           .catch((error) => {
-            console.log("Error en el la subida del primer archivo.", error);
-          });
-          fileService
-          .upload(selectedFile2)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del segundo archivo.", error);
-          });
-          fileService
-          .upload(selectedFile3)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del tercer archivo.", error);
-          });
-          fileService
-          .upload(selectedFile4)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del cuarto archivo.", error);
-          });
-        } else if(creditType == 3) {
-          fileService
-          .upload(selectedFile1)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del primer archivo.", error);
-          });
-          fileService
-          .upload(selectedFile2)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del segundo archivo.", error);
-          });
-          fileService
-          .upload(selectedFile3)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del tercer archivo.", error);
-          });
-          fileService
-          .upload(selectedFile4)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del cuarto archivo.", error);
-          });
-        } else {
-          fileService
-          .upload(selectedFile1)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del primer archivo.", error);
-          });
-          fileService
-          .upload(selectedFile2)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del segundo archivo.", error);
-          });
-          fileService
-          .upload(selectedFile3)
-          .then((response) => {
-            console.log(response.data);
-          })
-          .catch((error) => {
-            console.log("Error en el la subida del tercer archivo.", error);
+            console.log(
+              "Ha ocurrido un error al subir el archivo 1.",
+              error
+            );
           });
         }
-        navigate("/user/credits");
       })
       .catch((error) => {
         console.log(
@@ -460,7 +510,7 @@ const CreditApplication = () => {
               size="small"
               style={{ margin: '8px 0', width: '200px' }} 
             >
-              Presuouesto de remodelacion
+              Presupuesto de remodelacion
             <input
               type="file"
               accept=".pdf"

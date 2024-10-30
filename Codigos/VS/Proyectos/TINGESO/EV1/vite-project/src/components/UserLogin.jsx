@@ -29,29 +29,67 @@ const UserLogin = () => {
   const register = (e) => {
     e.preventDefault();
 
-    const user = { userName, userRut, userEmail, userPassword, userAge, userAccountSeniority, userWorkSeniority, userSavingCapacity, userBalance, userIndependent, executive };
-    console.log("Datos del usuario:", user);
-    if(userPassword === passwordConfirmation){
-        console.log("Solicitar registro de usuario.");
-        userService
-        .create(user)
-        .then((response) => {
-        console.log("Usuario registrado: ", response.data);
-        if(response.data != null){
-            alert("Usuario registrado exitosamente");
-        } else {
-            alert("Error al registrar usuario");
-        }
-        })
-        .catch((error) => {
+    if(userName === "" || userRut === "" || userEmail === "" || userPassword === "" || userAge === "" || userWorkSeniority === "" || userIndependent === ""){
+      alert("Debe completar todos los campos");
+      return;
+    }
+
+    if(userAge < 18 || userAge > 110){
+      alert("Edad invalida");
+      return;
+    }
+
+    if(userWorkSeniority < 0 || userWorkSeniority > 90){
+      alert("Antiguedad laboral invalida");
+      return;
+    }
+
+    if(isNaN(userAge) || isNaN(userWorkSeniority)){
+      alert("Edad y antiguedad laboral deben ser numeros enteros");
+      return;
+    }
+
+    if(userAge%1 != 0|| userWorkSeniority%1 != 0){
+      alert("Edad y antiguedad laboral deben ser numeros enteros");
+      return;
+    }
+
+    userService
+    .getByRut(userRut)
+    .then((response) => {
+      console.log("Usuario encontrado: ", response.data);
+      if(response.data){
+        alert("Rut ya registrado");
+        return;
+      } else {
+
+        const user = { userName, userRut, userEmail, userPassword, userAge, userAccountSeniority, userWorkSeniority, userSavingCapacity, userBalance, userIndependent, executive };
+        console.log("Datos del usuario:", user);
+        if(userPassword === passwordConfirmation){
+          console.log("Solicitar registro de usuario.");
+          userService
+          .create(user)
+          .then((response) => {
+            console.log("Usuario registrado: ", response.data);
+            if(response.data != null){
+              alert("Usuario registrado exitosamente");
+            } 
+          })
+          .catch((error) => {
             console.log(
                 "Ha ocurrido un error al intentar registrar al usuario.",
                 error
             );
-        });
-    } else {
-        alert("Las contraseñas no coinciden");
-    }
+          });
+        } else {
+          alert("Las contraseñas no coinciden");
+        }
+      }
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar buscar al usuario.", error);
+    });
+
   };
 
   const login = (e) => {
@@ -67,6 +105,7 @@ const UserLogin = () => {
     if(response.data){
         sessionStorage.setItem("userId", JSON.stringify(response.data.userId));
         navigate("/home");
+        window.location.reload();
     } else {
         alert("Credenciales invalidas");
     }
@@ -112,6 +151,7 @@ const UserLogin = () => {
               <TextField
                 id="password"
                 label="Contraseña"
+                type="password"
                 value={userPassword}
                 variant="standard"
                 onChange={(e) => setUserPassword(e.target.value)}
@@ -196,6 +236,7 @@ const UserLogin = () => {
               <TextField
                 id="password"
                 label="Contraseña"
+                type="password"
                 value={userPassword}
                 variant="standard"
                 onChange={(e) => setUserPassword(e.target.value)}
@@ -206,6 +247,7 @@ const UserLogin = () => {
               <TextField
                 id="password2"
                 label="Repetir contraseña"
+                type="password"
                 value={passwordConfirmation}
                 variant="standard"
                 onChange={(e) => setPasswordConfirmation(e.target.value)}

@@ -79,8 +79,9 @@ public class creditController {
 
     @GetMapping("/final")
     public double finalCreditAmount(@RequestParam("amount") double monthlyAmount,
-                                    @RequestParam("years") int years){
-        return CreditService.finalCreditAmount(monthlyAmount,years);
+                                    @RequestParam("years") int years,
+                                    @RequestParam("requested") int requestedAmount){
+        return CreditService.finalCreditAmount(monthlyAmount,years,requestedAmount);
     }
 
     @DeleteMapping("/delete/{creditId}")

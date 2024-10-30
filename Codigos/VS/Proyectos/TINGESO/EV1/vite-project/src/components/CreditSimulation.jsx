@@ -17,6 +17,22 @@ const CreditSimulation = () => {
 
   const calculateSimulation = (e) => {
     e.preventDefault();
+
+    if (amount === "" || interest === "" || year === "") {
+      alert("Debe completar todos los campos");
+      return;
+    }
+
+    if (isNaN(amount) || isNaN(interest) || isNaN(year)) {
+      alert("Los campos deben ser numeros");
+      return;
+    }
+
+    if (amount%1 != 0 || year%1 != 0) {
+      alert("El monto y el plazo deben ser numeros enteros");
+      return;
+    }
+
     console.log("Solicitar calcular simulacion.", amount,"-",interest,"-",year);
     creditService
     .simulation(amount, interest, year)
@@ -64,6 +80,7 @@ const CreditSimulation = () => {
             value={interest}
             variant="standard"
             onChange={(e) => setInterest(e.target.value)}
+            helperText="Porcentaje anual %"
           />
         </FormControl>
 

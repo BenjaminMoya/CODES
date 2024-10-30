@@ -22,4 +22,7 @@ public class fileEntity {
 
     // 1=CI,2=CA,3=HC,4=EPV,5=EFN,6=PDN,7=PR,8=CAA,9=Contrato
     private int type;
+
+    @Lob
+    private byte[] fileContent;
 }

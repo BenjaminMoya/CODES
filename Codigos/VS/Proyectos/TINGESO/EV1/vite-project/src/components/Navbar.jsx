@@ -36,6 +36,7 @@ export default function Navbar() {
   const unlog = () => {
     sessionStorage.setItem("userId", JSON.stringify(0));
     setLogged(false);
+    navigate("/home");
   }
 
   return (

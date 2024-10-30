@@ -26,7 +26,7 @@ public class creditEntity {
     private double creditProposedAmount;
     private int creditPhase;
     private int creditTerm;
-    private Date creditFirmDate;
+    private String creditFirmDate;
 
     // Primera = 1, Segunda = 2, Comercial = 3, Remodelacion = 4
     private int creditType;

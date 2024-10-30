@@ -12,9 +12,37 @@ import ListAlt from '@mui/icons-material/ListAlt';
 import Calculate from "@mui/icons-material/Calculate";
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
+import userService from "../services/user.service";
+import { useEffect, useState } from "react";
+
 
 export default function Sidemenu({ open, toggleDrawer }) {
+
+  const userId = JSON.parse(sessionStorage.getItem("userId"));
+  const [executive, setExecutive] = useState(false);
+  const [logged, setLogged] = useState(false);
   const navigate = useNavigate();
+
+  const init = () => {
+    userService
+    .getById(userId)
+    .then((response) => {
+      setExecutive(response.data.executive);
+      if(userId){
+        setLogged(true);
+      }
+    })
+    .catch((error) => {
+      console.log(
+        "Se ha producido un error al intentar mostrar datos del usuario.",
+        error
+      );
+    });
+  };
+
+  useEffect(() => {
+    init();
+  }, []);
 
   const listOptions = () => (
     <Box
@@ -44,20 +72,38 @@ export default function Sidemenu({ open, toggleDrawer }) {
           </ListItemIcon>
           <ListItemText primary="Solicitar credito" />
         </ListItemButton>
-
+      { executive && (
         <ListItemButton onClick={() => navigate("/credit/list")}>
           <ListItemIcon>
             <EditNotifications />
           </ListItemIcon>
           <ListItemText primary="Evaluar credito" />
         </ListItemButton>
-
+      )}
+      { !executive && (
+        <ListItemButton>
+          <ListItemIcon>
+            <EditNotifications />
+          </ListItemIcon>
+          <ListItemText primary="Evaluar credito" />
+        </ListItemButton>
+      )}
+      { logged && (
         <ListItemButton onClick={() => navigate("/user/credits")}>
           <ListItemIcon>
             <ListAlt />
           </ListItemIcon>
-          <ListItemText primary="Mis creditos" />
+         <ListItemText primary="Mis creditos" />
         </ListItemButton>
+      )}
+      { !logged && (
+        <ListItemButton>
+          <ListItemIcon>
+            <ListAlt />
+          </ListItemIcon>
+         <ListItemText primary="Mis creditos" />
+        </ListItemButton>
+      )}
       </List>
     </Box>
   );

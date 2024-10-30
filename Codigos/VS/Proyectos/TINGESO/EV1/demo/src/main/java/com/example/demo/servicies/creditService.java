@@ -69,14 +69,13 @@ public class creditService {
     public double finalMonthlyAmount(double requestedAmount,double interest,int years){
 
         double desgravamen = requestedAmount * 0.0003;
-        double administration = requestedAmount * 0.01;
         double monthlyAmount = creditAmountSimulation(requestedAmount,interest,years);
-        return monthlyAmount + administration + desgravamen;
+        return monthlyAmount + 20000 + desgravamen;
     }
 
-    public double finalCreditAmount(double monthlyAmount,int years){
+    public double finalCreditAmount(double monthlyAmount,int years,double requestedAmount){
 
         int months = years * 12;
-        return monthlyAmount*months;
+        return monthlyAmount*months + requestedAmount*0.01;
     }
 }

@@ -7,6 +7,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
@@ -17,48 +19,34 @@ public class fileController {
     @Autowired
     fileService FileService;
 
-    @PostMapping("/save")
-    public ResponseEntity<fileEntity> saveFile(fileEntity file){
-
-        fileEntity newFile = FileService.saveFile(file);
-        return ResponseEntity.ok(newFile);
-    }
-
-    @GetMapping("/get")
-    public ResponseEntity<fileEntity> getInformation(@RequestParam("creditId") long creditId,
-                                                     @RequestParam("type") int type){
-        fileEntity file = FileService.getInformation(creditId,type);
-        return ResponseEntity.ok(file);
-    }
-
-    @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    @PostMapping("/upload/{id}/{type}")
+    public int saveFile(@PathVariable long id,
+                        @PathVariable int type,
+                        @RequestParam("file") MultipartFile file) {
         try {
-            String fileUrl = FileService.uploadFile(file);
-            return ok("File uploaded successfully: " + fileUrl);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file");
+            return FileService.uploadFile(id, type, file);
+        } catch (IOException e) {
+            return 0;
         }
     }
 
-    @GetMapping("/download")
-    public ResponseEntity<byte[]> downloadFile(@RequestParam String fileName) {
-        try {
-            byte[] fileData = FileService.downloadFile(fileName);
+    @GetMapping("/download/{id}/{type}")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable long id,
+                                               @PathVariable int type) {
+        fileEntity pdfFile = FileService.downloadFile(id,type);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pdfFile.getFilename() + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfFile.getFileContent());
+    }
 
-            // Configura los encabezados para la respuesta de la descarga
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDisposition(ContentDisposition.builder("attachment")
-                    .filename(fileName)
-                    .build());
-
-            return ok()
-                    .headers(headers)
-                    .body(fileData);
+    @DeleteMapping("/delete/{id}")
+    public int deleteFiles(@PathVariable long id){
+        try{
+            FileService.deleteFiles(id);
+            return 1;
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+            return 0;
         }
     }
 }

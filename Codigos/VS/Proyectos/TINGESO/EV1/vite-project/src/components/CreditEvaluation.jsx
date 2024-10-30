@@ -22,6 +22,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox"
 import savingCapacityService from "../services/savingCapacity.service";
 import fileService from "../services/file.service";
+import { all } from "axios";
 
 const CreditEvaluation = () => {
 
@@ -33,7 +34,7 @@ const CreditEvaluation = () => {
   const [creditTerm] = useState(creditInit.creditTerm);
   const [creditFirmDate,setCreditFirmDate] = useState(creditInit.creditFirmDate);
   const [creditType] = useState(creditInit.creditType);
-  const [creditReason,setCreditReason] = useState("");
+  const [creditReason, setCreditReason] = useState("");
   const [interest, setInterest] = useState("");
   const [monthlyEntry, setMonthlyEntry] = useState("");
   const [monthlyDeposit, setMonthlyDeposit] = useState("");
@@ -47,8 +48,11 @@ const CreditEvaluation = () => {
   const [workSeniority,setWorkSeniority] = useState("");
   const [indepedent,setIndependent] = useState("");
   const [selectedFile1, setSelectedFile1] = useState(null);
-  const today = new Date().toISOString().split('T')[0];
-  const firmDate = new Date(creditFirmDate).toISOString().split('T')[0];
+  const [selectedFile2, setSelectedFile2] = useState(null);
+  const [cooldown, setCooldown] = useState(false);
+  const today = new Date();
+  const firmDate = new Date(creditFirmDate);
+  const formatDate = firmDate.toISOString().split('T')[0];
   const [options, setOptions] = useState({
     greatRetirement: false,
     periodicDeposits: false,
@@ -61,6 +65,7 @@ const CreditEvaluation = () => {
     .getById(sessionStorage.getItem("userId"))
     .then((response) => {
       console.log("Mostrando datos del usuario.", response.data);
+      setCreditReason(creditInit.creditReason);
       setAge(response.data.userAge);
       setExecutive(response.data.executive);
       setWorkSeniority(response.data.userWorkSeniority);
@@ -226,6 +231,15 @@ const CreditEvaluation = () => {
   }
 
   const ev3 = () => {
+
+    if(interest == "" || interest <= 0){
+      return alert("El interes debe ser un numero positivo");
+    }
+
+    if(monthlyEntry == "" || monthlyEntry <= 0 || monthlyEntry%1 != 0){
+      return alert("La cuota mensual debe ser un numero entero positivo");
+    }
+
     if(creditType == 1 && (interest < 3.5 || interest > 5)){
       return alert("El interes debe estar entre 3.5% y 5%");
     } else if(creditType == 2 && (interest < 4 || interest > 6)){
@@ -251,6 +265,15 @@ const CreditEvaluation = () => {
   };
 
   const ev4 = () => {
+
+    if(interest == "" || interest <= 0){
+      return alert("El interes debe ser un numero positivo");
+    }
+
+    if(monthlyEntry == "" || monthlyEntry <= 0 || monthlyEntry%1 != 0 || allDebts == "" || allDebts <= 0 || allDebts%1 != 0){
+      return alert("La cuota mensual y las deudas mensuales deben ser un numero entero positivo");
+    }
+
     creditService
     .simulation(creditRequestedAmount,interest,creditTerm)
     .then((response) => {
@@ -292,6 +315,10 @@ const CreditEvaluation = () => {
   };
 
   const ev6 = () => {
+
+    if(monthlyDeposit == "" || monthlyDeposit <= 0 || monthlyDeposit%1 != 0 || topRetirement == "" || topRetirement <= 0 || topRetirement%1 != 0){
+      return alert("El deposito mensual y el retiro maximo deben ser un numero entero positivo");
+    }
     
     userService
     .zero(creditUserId)
@@ -374,12 +401,16 @@ const CreditEvaluation = () => {
 
   const approve = (e) => {
     e.preventDefault();
+    
+    if(savingCapacity == 0 || savingCapacity == -1 || interest == 0 || interest == -1 || monthlyEntry == 0 || monthlyEntry == -1 || monthlyDeposit == 0 || monthlyDeposit == -1 || allDebts == 0 || allDebts == -1 || topRetirement == 0 || topRetirement == -1 || relationCI == 0 || relationCI == -1 || relationDI == 0 || relationDI == -1){
+      alert("Debe completar todas las evaluaciones");
+    }
 
     creditService
     .monthly(creditRequestedAmount,interest,creditTerm)
     .then((response) => {
       console.log("Cuota mensual: ", response.data);
-      const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:response.data*12*creditTerm, creditPhase:4 ,creditTerm, creditFirmDate, creditType, creditReason};
+      const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:response.data, creditPhase:4 ,creditTerm, creditFirmDate, creditType, creditReason};
       creditService
       .update(credit)
       .then((response) => {
@@ -401,11 +432,15 @@ const CreditEvaluation = () => {
   const reject = (e) => {
     e.preventDefault();
     
+    if (creditReason == "" || creditReason == null) {
+      return alert("Debe ingresar una razon para rechazar el credito");
+    }
+
     const credit = { creditId, creditUserId, creditPropertyAmount, creditRequestedAmount, creditPhase:7 ,creditTerm, creditFirmDate, creditType, creditReason};
     creditService
     .update(credit)
     .then((response) => {
-      console.log("El credito ha sido aprobado.", response.data);
+      console.log("El credito ha sido rechazado.", response.data);
       navigate("/credit/list");
     })
     .catch((error) => {
@@ -419,9 +454,9 @@ const CreditEvaluation = () => {
   const accept = (e) => {
     e.preventDefault();
 
-    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:4 ,creditTerm, creditFirmDate, creditType, creditReason:creditInit.creditReason};
+    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:5 ,creditTerm, creditFirmDate, creditType, creditReason:creditInit.creditReason};
     creditService
-    .update(creditId)
+    .update(credit)
     .then((response) => {
       console.log("El credito ha sido aprobado.", response.data);
       navigate("/user/credits");
@@ -438,7 +473,15 @@ const CreditEvaluation = () => {
     .deleteCredit(creditId)
     .then((response) => {
       console.log("El credito ha sido cancelado.", response.data);
-      navigate("/user/credits");
+      fileService
+      .deleteFiles(creditId)
+      .then((response) => {
+        console.log("Los archivos han sido eliminados.", response.data);
+        navigate("/user/credits");
+      })
+      .catch((error) => {
+        console.log("Ha ocurrido un error al intentar eliminar los archivos.", error);
+      });
     })
     .catch((error) => {
       console.log("Ha ocurrido un error al intentar cancelar el credito.", error);
@@ -448,7 +491,15 @@ const CreditEvaluation = () => {
   const contract = (e) => {
     e.preventDefault();
 
-    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:6 ,creditTerm, creditFirmDate, creditType, creditReason:creditInit.creditReason};
+    if(creditFirmDate == "" || creditFirmDate == null || creditFirmDate < today){
+      return alert("La fecha de firma debe ser posterior a la fecha actual");
+    }
+
+    if(selectedFile1 == null){
+      return alert("Debe subir el contrato");
+    }
+
+    const credit = { creditId, creditUserId, creditPropertyAmount:creditInit.creditPropertyAmount, creditRequestedAmount, creditProposedAmount:creditInit.creditProposedAmount, creditPhase:6 ,creditTerm, creditFirmDate:formatDate, creditType, creditReason:creditInit.creditReason};
 
     creditService
     .update(credit)
@@ -513,6 +564,160 @@ const CreditEvaluation = () => {
     });
   }
 
+  const download = (e) => {
+    e.preventDefault();
+
+    if (cooldown) {
+      alert('Debes esperar 10 segundos para volver a descargar los archivos.');
+      return;
+    }
+
+    setCooldown(true);
+    setTimeout(() => {
+      setCooldown(false);
+    }, 10000);
+
+    if(creditType == 1){
+      fileService
+      .download(creditId,1)
+      .then(() => {
+        console.log("Descargando documento 1.");
+        fileService
+        .download(creditId,2)
+        .then(() => {
+          console.log("Descargando documento 2.");
+          fileService
+          .download(creditId,3)
+          .then(() => {
+            console.log("Descargando documento 3.");
+          })
+          .catch((error) => {
+            console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+          })
+        })
+        .catch((error) => {
+          console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+        })
+      })
+      .catch((error) => {
+        console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+      });
+    } else if(creditType == 2){
+      fileService
+      .download(creditId,1)
+      .then(() => {
+        console.log("Descargando documento.");
+        fileService
+        .download(creditId,2)
+        .then(() => {
+          console.log("Descargando documento.");
+          fileService
+          .download(creditId,4)
+          .then(() => {
+            console.log("Descargando documento.");
+            fileService
+            .download(creditId,3)
+            .then(() => {
+              console.log("Descargando documento.");
+            })
+            .catch((error) => {
+              console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+            })
+          })
+          .catch((error) => {
+            console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+          })
+        })
+        .catch((error) => {
+          console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+        })
+      })
+      .catch((error) => {
+        console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+      });
+    } else if(creditType == 3){
+      fileService
+      .download(creditId,5)
+      .then(() => {
+        console.log("Descargando documento.");
+        fileService
+        .download(creditId,1)
+        .then(() => {
+          console.log("Descargando documento.");
+          fileService
+          .download(creditId,2)
+          .then(() => {
+            console.log("Descargando documento.");
+            fileService
+            .download(creditId,6)
+            .then(() => {
+              console.log("Descargando documento.");
+            })
+            .catch((error) => {
+              console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+            })
+          })
+          .catch((error) => {
+            console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+          })
+        })
+        .catch((error) => {
+          console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+        })
+      })
+      .catch((error) => {
+        console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+      });
+    } else if(creditType == 4){
+      fileService
+      .download(creditId,1)
+      .then(() => {
+        console.log("Descargando documento.");
+        fileService
+        .download(creditId,7)
+        .then(() => {
+          console.log("Descargando documento.");
+          fileService
+          .download(creditId,8)
+          .then(() => {
+            console.log("Descargando documento.");
+          })
+          .catch((error) => {
+            console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+          })
+        })
+        .catch((error) => {
+          console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+        })
+      })
+      .catch((error) => {
+        console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+      });
+    }
+  }
+
+  const downloadContract = (e) => {
+    e.preventDefault();
+    if (cooldown) {
+      alert('Debes esperar 10 segundos para volver a descargar el archivo.');
+      return;
+    }
+
+    setCooldown(true);
+    setTimeout(() => {
+      setCooldown(false);
+    }, 10000);
+
+    fileService
+    .download(creditId,8)
+    .then(() => {
+      console.log("Descargando documento.");
+    })
+    .catch((error) => {
+      console.log("Ha ocurrido un error al intentar descargar el documento.", error);
+    });
+  }
+
   if(executive && creditInit.creditPhase == 3){
     return (
       <div>
@@ -554,6 +759,9 @@ const CreditEvaluation = () => {
             {creditType== 4 && (
               <p> Tipo de credito: Remodelacion </p>
             )}
+            <p 
+            style={{ textDecoration: 'underline' }}
+            onClick={(e) => download(e)} >Descargar archivos</p>
             <p> {ev1()} </p>
             <p> {ev2()} </p>
             { ev5() && (
@@ -846,7 +1054,7 @@ const CreditEvaluation = () => {
                 onChange={handleDateChange}
               />
           </FormControl>
-          <p>Fecha seleccionada: {creditFirmDate ? creditFirmDate.toDateString() : 'Ninguna'}</p>
+          <p>Fecha seleccionada: {creditFirmDate ? formatDate: 'Ninguna'}</p>
   
           <br />
           <FormControl fullWidth style={{ marginTop: 16 }}>
@@ -903,7 +1111,10 @@ const CreditEvaluation = () => {
           <p> Monto solicitado: ${creditRequestedAmount} (CLP) </p>
           <p> Plazo: {creditTerm} </p>
           <p> Etapa: Lista para desembolso </p>
-          <p> Fecha de firma: {firmDate} </p>
+          <p> Fecha de firma: {creditInit.creditFirmDate} </p>
+          <p 
+            style={{ textDecoration: 'underline' }}
+            onClick={(e) => downloadContract(e)} >Descargar contrato</p>
   
           <br />
           
@@ -1028,8 +1239,11 @@ const CreditEvaluation = () => {
           {creditInit.creditPhase == 4 && (
             <div>
               <p>Etapa: Pre-aprobada </p>
-              <p>Propuesta de monto final: ${creditInit.creditProposedAmount} (CLP)</p>
-              <p>Propuesta de cuota mensual: ${creditInit.creditProposedAmount/(12*creditTerm)} (CLP)</p>
+              <p>Cargo administrativo: ${creditInit.creditRequestedAmount*0.01} (CLP)</p>
+              <p>Propuesta de cuota mensual: ${creditInit.creditProposedAmount} (CLP)</p>
+              <Tooltip title="Total de cuotas mensuales en conjunto del cargo administrativo" arrow>
+                <p>Propuesta de monto final: ${(creditInit.creditProposedAmount*12*creditInit.creditTerm)+creditInit.creditRequestedAmount*0.01} (CLP)</p>
+              </Tooltip>
               <FormControl>
                 <br />
   
@@ -1043,6 +1257,19 @@ const CreditEvaluation = () => {
                   Aceptar propuesta
                 </Button>
               </FormControl>
+              <FormControl>
+                <br />
+  
+                <Button
+                  variant="contained"
+                  color="info"
+                  onClick={(e) => cancel(e)}
+                  style={{ marginLeft: "0.5rem" }}
+                  startIcon={<CloseSharpIcon />}
+                >
+                Rechazar propuesta 
+                </Button>
+              </FormControl>
             </div>
           )}
           {creditInit.creditPhase == 5 && (
@@ -1052,25 +1279,32 @@ const CreditEvaluation = () => {
             <p>Etapa: Lista para desembolso</p>
           )}
           {creditInit.creditPhase == 7 && (
-            <p>Etapa: Rechazada </p>
+            <div>
+              <p>Etapa: Rechazada </p>
+              <p>Indicaciones: </p>
+              <Box display="flex" alignItems="row" mb={1}>
+                <Typography>{creditReason}</Typography>
+              </Box>
+              <FormControl>
+                <br />
+  
+                <Button
+                  variant="contained"
+                  color="info"
+                  onClick={(e) => cancel(e)}
+                  style={{ marginLeft: "0.5rem" }}
+                  startIcon={<CloseSharpIcon />}
+                >
+                Cancelar Solicitud
+                </Button>
+              </FormControl>
+            </div>
+            
           )}
           {creditInit.creditPhase == 9 && (
             <p>Etapa: En desembolso </p>
           )}
           <br />
-          <FormControl>
-            <br />
-  
-            <Button
-              variant="contained"
-              color="info"
-              onClick={(e) => cancel(e)}
-              style={{ marginLeft: "0.5rem" }}
-              startIcon={<CloseSharpIcon />}
-            >
-              Cancelar Solicitud
-            </Button>
-          </FormControl>
         </form>
         <br />
         <Link to="/credit/list">Volver a la lista</Link>

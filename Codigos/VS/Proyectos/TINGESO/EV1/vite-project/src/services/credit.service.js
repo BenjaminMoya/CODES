@@ -32,8 +32,8 @@ const monthly = (amount,interest,years) => {
     return httpCommon.get('/api/credit/monthly',{params:{amount,interest,years}});
 }
 
-const final = (amount,years) => {
-    return httpCommon.get('/api/credit/final',{params:{amount,years}});
+const final = (amount,years,requested) => {
+    return httpCommon.get('/api/credit/final',{params:{amount,years,requested}});
 }
 
 const deleteCredit = (id) => {
