@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  database:
+    image: postgres:latest
+    container_name: postgreSQL3Back
+    environment:
+      POSTGRES_USER: tingeso
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: creditadmin-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  # Frontend services
+  frontend:
+    container_name: creditapp-frontend
+    image: benjaminmoya/creditapp-frontend:latest
+    ports:
+      - "8070:80"
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  # Backend services
+  backend1:
+    image: benjaminmoya/creditapp-backend:latest
+    environment:
+      - DB_HOST=192.168.1.104
+      - DB_PORT=5432
+      - DB_USER=tingeso
+      - DB_PASS=1234
+      - DB_NAME=creditadmin-db
+    networks:
+      - backend-network
+
+  backend2:
+    image: benjaminmoya/creditapp-backend:latest
+    environment:
+      - DB_HOST=192.168.1.104
+      - DB_PORT=5432
+      - DB_USER=tingeso
+      - DB_PASS=1234
+      - DB_NAME=creditadmin-db
+    networks:
+      - backend-network
+
+  backend3:
+    image: benjaminmoya/creditapp-backend:latest
+    environment:
+      - DB_HOST=192.168.1.104
+      - DB_PORT=5432
+      - DB_USER=tingeso
+      - DB_PASS=1234
+      - DB_NAME=creditadmin-db
+    networks:
+      - backend-network
+
+  # Nginx for backend load balancing
+  nginx-backend:
+    image: nginx:latest
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./nginx-backend.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+
+volumes:
+  postgres_data:

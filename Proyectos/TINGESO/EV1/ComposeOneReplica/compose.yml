@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  database:
+    image: postgres:latest
+    container_name: postgreSQLOne
+    environment:
+      POSTGRES_USER: tingeso
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: creditadmin-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  frontend:
+    container_name: creditapp-frontend
+    image: benjaminmoya/creditapp-frontend:latest
+    ports:
+      - "8070:80"
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  backend:
+    container_name: creditapp-backend
+    image: benjaminmoya/creditapp-backend:latest
+    ports:
+      - "8090:8090"
+    environment:
+      - DB_HOST=192.168.1.104
+      - DB_PORT=5432
+      - DB_USER=tingeso
+      - DB_PASS=1234
+      - DB_NAME=creditadmin-db
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  postgres_data:
